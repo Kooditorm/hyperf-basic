@@ -5,25 +5,33 @@ namespace Kooditorm\Hyperf\Basic;
 
 use Hyperf\Contract\Arrayable;
 use Hyperf\Contract\Jsonable;
-use Hyperf\Database\Model\Concerns\HasAttributes;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use ArrayAccess;
-use Hyperf\Stringable\Str;
 use JsonException;
 use JsonSerializable;
+
+use function Hyperf\Collection\collect;
 class DTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 {
-    use HasAttributes;
+    protected array $attributes = [];
+
+    protected array $attr = [];
+
+    protected array $property = [];
+    protected array $accessFields = [];
+
     public function __construct(protected RequestInterface $request)
     {
-        $this->init();
+        $properties = $this->getProperties();
+        if (!empty($properties)) {
+            foreach ($properties as $key => $defaultValue) {
+                if (!is_null($defaultValue)) {
+                    $this->property[$key] = $defaultValue;
+                }
+                $this->accessFields[] = $key;
+            }
+        }
     }
-
-    public function init(): void
-    {
-        $this->getField();
-    }
-
 
     /**
      * @return string
@@ -35,18 +43,18 @@ class DTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
-     * Dynamically retrieve attributes on the model.
+     * Dynamically retrieve attributes on the DTO.
      *
      * @param string $key
      * @return mixed
      */
-    public function __get(string $key)
+    public function __get(string $key): mixed
     {
         return $this->getAttribute($key);
     }
 
     /**
-     * Dynamically set attributes on the model.
+     * Dynamically set attributes on the DTO.
      *
      * @param string $key
      * @param mixed $value
@@ -58,7 +66,7 @@ class DTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
-     * Determine if an attribute or relation exists on the model.
+     * Determine if an attribute exists on the DTO.
      *
      * @param string $key
      * @return bool
@@ -69,12 +77,12 @@ class DTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
-     * Unset an attribute on the model.
+     * Unset an attribute on the DTO.
      *
      * @param string $key
      * @return void
      */
-    public function __unset(string $key)
+    public function __unset(string $key): void
     {
         $this->offsetUnset($key);
     }
@@ -110,7 +118,7 @@ class DTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
      */
     public function offsetExists(mixed $offset): bool
     {
-        return !is_null($this->getAttribute($offset));
+        return isset($this->attributes[$offset]);
     }
 
     /**
@@ -125,38 +133,39 @@ class DTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
-     * Set a given attribute on the model.
+     * Get an attribute from the DTO.
+     *
+     * @param string $key
+     * @return mixed
+     */
+    public function getAttribute(string $key): mixed
+    {
+        $this->loadAttrs();
+        return $this->attributes[$key] ?? null;
+    }
+
+    /**
+     * Set a given attribute on the DTO.
      *
      * @param string $key
      * @param mixed $value
-     * @return mixed
+     * @return $this
      */
-    public function setAttribute(string $key, mixed $value): mixed
+    public function setAttribute(string $key, mixed $value): static
     {
-        if ($this->hasSetMutator($key)) {
-            return $this->setMutatedAttributeValue($key, $value);
-        }
-
-        if ($value && $this->isDateAttribute($key)) {
-            $value = $this->fromDateTime($value);
-        }
-
-        if ($this->isClassCastable($key)) {
-            $this->setClassCastableAttribute($key, $value);
-            return $this;
-        }
-
-        if (!is_null($value) && $this->isJsonCastable($key)) {
-            $value = $this->castAttributeAsJson($key, $value);
-        }
-
-        if (Str::contains($key, '->')) {
-            return $this->fillJsonAttribute($key, $value);
-        }
-
-        $this->attributes[$key] = $value;
-
+        $this->attr[$key] = $value;
         return $this;
+    }
+
+    /**
+     * Get all attributes.
+     *
+     * @return array
+     */
+    public function getAttributes(): array
+    {
+        $this->loadAttrs();
+        return $this->attributes;
     }
 
     /**
@@ -190,24 +199,46 @@ class DTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
-     * Get allowed fields
+     * Get allowed fields with default values
      *
      * @return array
      */
-    protected function getField(): array
+    protected function getProperties(): array
     {
         $reflection = new \ReflectionClass($this);
         $properties = [];
 
         foreach ($reflection->getProperties() as $property) {
             if ($property->isPublic() && $property->getDeclaringClass()->getName() === get_class($this)) {
-                $properties[] = $property->getName();
+                if ($property->isInitialized($this)) {
+                    $properties[$property->getName()] = $property->getValue($this);
+                } else {
+                    $properties[$property->getName()] = null;
+                }
             }
         }
 
-        print_r($properties);
+        return $properties;
+    }
 
+    /**
+     * @return void
+     */
+    protected function loadAttrs(): void
+    {
+        $data = $this->request->all();
+        collect($data)->map(function ($value, $key) {
+            if (in_array($key, $this->accessFields, true)) {
+                $this->attributes[$key] = $value;
+            }
+        });
+        $properties = $this->getProperties();
+        foreach ($properties as $key => $defaultValue) {
+            if (!empty($defaultValue) && (!isset($this->property[$key]) || $this->property[$key] !== $defaultValue)) {
+                $this->attributes[$key] = $defaultValue;
+            }
+        }
+        $this->attributes = array_merge($this->attributes, $this->attr);
 
-        return [];
     }
 }
