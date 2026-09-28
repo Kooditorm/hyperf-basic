@@ -1,17 +1,17 @@
 <?php
 declare(strict_types=1);
 
-namespace Kooditorm\Hyperf\Basic;
+namespace Kooditorm\Hyperf\Basic\DTO;
 
+use ArrayAccess;
 use Hyperf\Contract\Arrayable;
 use Hyperf\Contract\Jsonable;
 use Hyperf\HttpServer\Contract\RequestInterface;
-use ArrayAccess;
 use JsonException;
 use JsonSerializable;
-
 use function Hyperf\Collection\collect;
-class AbstractBaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
+
+class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 {
     protected array $attributes = [];
 
