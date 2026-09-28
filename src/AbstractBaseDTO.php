@@ -11,7 +11,7 @@ use JsonException;
 use JsonSerializable;
 
 use function Hyperf\Collection\collect;
-class DTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
+class AbstractBaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 {
     protected array $attributes = [];
 
