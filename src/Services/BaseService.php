@@ -15,4 +15,8 @@ namespace Kooditorm\Hyperf\Basic\Services;
 class BaseService
 {
 
+    public function __construct()
+    {
+
+    }
 }

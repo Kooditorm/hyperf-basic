@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -9,41 +10,58 @@ declare(strict_types=1);
  * @license  https://github.com/Kooditorm/hyperf-basict/blob/master/LICENSE
  */
 
+namespace Kooditorm\Hyperf\Basic\Traits;
 
-namespace Kooditorm\Hyperf\Basic\DTO;
-
-use ArrayAccess;
 use Hyperf\Contract\Arrayable;
-use Hyperf\Contract\Jsonable;
-use Hyperf\HttpServer\Contract\RequestInterface;
 use JsonException;
-use JsonSerializable;
+use ReflectionClass;
 use function Hyperf\Collection\collect;
 
-class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
+/**
+ * DTO / VO 的公共属性容器。
+ *
+ * 提供统一的属性读写、默认值合并与序列化行为；
+ * 数据来源差异由实现类通过 source() 决定：
+ * - DTO：入站请求
+ * - VO：服务层返回结果
+ */
+trait HasAttributes
 {
+    /** 对外暴露的属性集合 */
     protected array $attributes = [];
 
+    /** 通过 setAttribute() 显式设置的属性 */
     protected array $attr = [];
 
+    /** 类声明时的属性默认值 */
     protected array $property = [];
+
+    /** 允许被外部数据赋值的字段白名单 */
     protected array $accessFields = [];
 
-    public function __construct(protected RequestInterface $request)
+    /**
+     * 数据来源
+     */
+    abstract protected function source(): array;
+
+    /**
+     * 初始化字段白名单与默认值
+     */
+    protected function initProperties(): void
     {
         $properties = $this->getProperties();
-        if (!empty($properties)) {
-            foreach ($properties as $key => $defaultValue) {
-                if (!is_null($defaultValue)) {
-                    $this->property[$key] = $defaultValue;
-                }
-                $this->accessFields[] = $key;
+        if (empty($properties)) {
+            return;
+        }
+        foreach ($properties as $key => $defaultValue) {
+            if (! is_null($defaultValue)) {
+                $this->property[$key] = $defaultValue;
             }
+            $this->accessFields[] = $key;
         }
     }
 
     /**
-     * @return string
      * @throws JsonException
      */
     public function __toString(): string
@@ -52,10 +70,7 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
-     * Dynamically retrieve attributes on the DTO.
-     *
-     * @param string $key
-     * @return mixed
+     * Dynamically retrieve attributes on the object.
      */
     public function __get(string $key): mixed
     {
@@ -63,11 +78,7 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
-     * Dynamically set attributes on the DTO.
-     *
-     * @param string $key
-     * @param mixed $value
-     * @return void
+     * Dynamically set attributes on the object.
      */
     public function __set(string $key, mixed $value): void
     {
@@ -75,10 +86,7 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
-     * Determine if an attribute exists on the DTO.
-     *
-     * @param string $key
-     * @return bool
+     * Determine if an attribute exists on the object.
      */
     public function __isset(string $key): bool
     {
@@ -86,10 +94,7 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
-     * Unset an attribute on the DTO.
-     *
-     * @param string $key
-     * @return void
+     * Unset an attribute on the object.
      */
     public function __unset(string $key): void
     {
@@ -98,9 +103,6 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 
     /**
      * Get the value for a given offset.
-     *
-     * @param mixed $offset
-     * @return mixed
      */
     public function offsetGet(mixed $offset): mixed
     {
@@ -109,10 +111,6 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 
     /**
      * Set the value for a given offset.
-     *
-     * @param mixed $offset
-     * @param mixed $value
-     * @return void
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
@@ -121,9 +119,6 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 
     /**
      * Determine if the given attribute exists.
-     *
-     * @param mixed $offset
-     * @return bool
      */
     public function offsetExists(mixed $offset): bool
     {
@@ -132,9 +127,6 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 
     /**
      * Unset the value for a given offset.
-     *
-     * @param mixed $offset
-     * @return void
      */
     public function offsetUnset(mixed $offset): void
     {
@@ -142,10 +134,7 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
-     * Get an attribute from the DTO.
-     *
-     * @param string $key
-     * @return mixed
+     * Get an attribute from the object.
      */
     public function getAttribute(string $key): mixed
     {
@@ -154,11 +143,7 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
-     * Set a given attribute on the DTO.
-     *
-     * @param string $key
-     * @param mixed $value
-     * @return $this
+     * Set a given attribute on the object.
      */
     public function setAttribute(string $key, mixed $value): static
     {
@@ -168,8 +153,6 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 
     /**
      * Get all attributes.
-     *
-     * @return array
      */
     public function getAttributes(): array
     {
@@ -179,19 +162,15 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 
     /**
      * Get the instance as an array.
-     *
-     * @return array
      */
     public function toArray(): array
     {
-        return $this->getAttributes();
+        return $this->normalizeArray($this->getAttributes());
     }
 
     /**
      * Convert the object to its JSON representation.
      *
-     * @param int $options
-     * @return string
      * @throws JsonException
      */
     public function toJson(int $options = 0): string
@@ -214,16 +193,14 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
      */
     protected function getProperties(): array
     {
-        $reflection = new \ReflectionClass($this);
+        $reflection = new ReflectionClass($this);
         $properties = [];
 
         foreach ($reflection->getProperties() as $property) {
-            if ($property->isPublic() && $property->getDeclaringClass()->getName() === get_class($this)) {
-                if ($property->isInitialized($this)) {
-                    $properties[$property->getName()] = $property->getValue($this);
-                } else {
-                    $properties[$property->getName()] = null;
-                }
+            if ($property->isPublic() && $property->getDeclaringClass()->getName() === $this::class) {
+                $properties[$property->getName()] = $property->isInitialized($this)
+                    ? $property->getValue($this)
+                    : null;
             }
         }
 
@@ -231,23 +208,57 @@ class BaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
     }
 
     /**
+     * 载入属性，优先级：外部数据 < 类属性默认值 < 显式赋值
+     *
      * @return void
      */
     protected function loadAttrs(): void
     {
-        $data = $this->request->all();
-        collect($data)->map(function ($value, $key) {
+        collect($this->source())->map(function ($value, $key) {
             if (in_array($key, $this->accessFields, true)) {
-                $this->attributes[$key] = $value;
+                $this->attributes[$key] = $this->castValue($key, $value);
             }
         });
-        $properties = $this->getProperties();
-        foreach ($properties as $key => $defaultValue) {
-            if (!empty($defaultValue) && (!isset($this->property[$key]) || $this->property[$key] !== $defaultValue)) {
+
+        foreach ($this->getProperties() as $key => $defaultValue) {
+            if (! empty($defaultValue) && (! isset($this->property[$key]) || $this->property[$key] !== $defaultValue)) {
                 $this->attributes[$key] = $defaultValue;
             }
         }
-        $this->attributes = array_merge($this->attributes, $this->attr);
 
+        $this->attributes = array_merge($this->attributes, $this->attr);
+    }
+
+    /**
+     * 外部数据进入时的类型转换钩子，默认原样返回。
+     * VO 可覆写实现嵌套 VO 的自动实例化。
+     */
+    protected function castValue(string $key, mixed $value): mixed
+    {
+        return $value;
+    }
+
+    /**
+     * 递归序列化嵌套对象（VO / DTO / 数组）
+     */
+    protected function normalizeArray(array $attributes): array
+    {
+        foreach ($attributes as $key => $value) {
+            $attributes[$key] = $this->normalizeValue($value);
+        }
+
+        return $attributes;
+    }
+
+    protected function normalizeValue(mixed $value): mixed
+    {
+        if ($value instanceof Arrayable) {
+            return $this->normalizeArray($value->toArray());
+        }
+        if (is_array($value)) {
+            return $this->normalizeArray($value);
+        }
+
+        return $value;
     }
 }
