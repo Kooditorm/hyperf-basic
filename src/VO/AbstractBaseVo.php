@@ -17,13 +17,11 @@ use Hyperf\Contract\Arrayable;
 use Hyperf\Contract\Jsonable;
 use JsonSerializable;
 use Kooditorm\Hyperf\Basic\Traits\HasAttributes;
-use OpenApi\Attributes\Property;
-use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionProperty;
-use Throwable;
 use Traversable;
+use Kooditorm\Hyperf\Basic\Annotations\ViewObject;
 
 /**
  * VO 基类（View Object）。
@@ -31,7 +29,7 @@ use Traversable;
  * 面向接口返回的展示对象，数据来源由业务层传入，不依赖请求上下文。
  * 支持按属性声明的类型自动把数组转换成嵌套 VO，字段由目标 VO 的白名单过滤。
  */
-class AbstractBaseVo implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
+abstract class AbstractBaseVo implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 {
     use HasAttributes;
 
@@ -116,17 +114,16 @@ class AbstractBaseVo implements Jsonable, Arrayable, ArrayAccess, JsonSerializab
 
             $name = $property->getName();
 
-            // 列表优先：只要带 items 注解就按 VO[] 处理，避免被对象类型声明抢走
-            $ref = $this->resolveItemsRef($property);
-            if (is_string($ref) && is_a($this->resolveClassName($ref), ViewObject::class, true)) {
-                $this->voItemCasts[$name] = $this->resolveClassName($ref);
+            // 1) 原生注解：#[ArrayOf(ConfigVo::class)]
+            if ($this->collectArrayOf($name, $property)) {
                 continue;
             }
+
 
             $type = $property->getType();
             if ($type instanceof ReflectionNamedType
                 && ! $type->isBuiltin()
-                && is_a($type->getName(), ViewObject::class, true)
+                && $this->isNestedVo($type->getName())
             ) {
                 $this->voCasts[$name] = $type->getName();
             }
@@ -134,47 +131,33 @@ class AbstractBaseVo implements Jsonable, Arrayable, ArrayAccess, JsonSerializab
     }
 
     /**
-     * 取出数组元素的 VO 类型，支持两种写法：
-     * - #[OA\Property(items: new OA\Items(ref: ConfigVo::class))]
-     * - #[OA\Items(ref: ConfigVo::class)]
+     * 是否为可嵌套的 VO。
+     *
+     * 用 self::class（AbstractBaseVo）而非 ViewObject 接口判断：
+     * 嵌套转换依赖 new $voClass($value) 的构造契约，这是基类提供的能力。
+     * 注意必须用 self::class 而不是 static::class —— 后者在 UserVo/ConfigVo
+     * 实例中会解析成子类自身，判断会失效。
      */
-    protected function resolveItemsRef(ReflectionProperty $property): ?string
+    protected function isNestedVo(string $class): bool
     {
-        foreach ($property->getAttributes(Property::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
-            try {
-                $annotation = $attribute->newInstance();
-            } catch (Throwable) {
-                continue;
-            }
-            $items = $annotation->items ?? null;
-            if ($items instanceof Items) {
-                return $items->ref ?? null;
-            }
-        }
-
-        // 独立写法 #[OA\Items(ref: ConfigVo::class)]
-        $attributes = $property->getAttributes(Items::class);
-        if ($attributes !== []) {
-            return $attributes[0]->newInstance()->ref ?? null;
-        }
-
-        return null;
+        return is_a($class, self::class, true);
     }
 
     /**
-     * 将注解里的 ref 解析为类名（支持 FQCN、短类名、#/components/schemas/X）
+     * 原生注解：#[ArrayOf(ConfigVo::class)]
      */
-    protected function resolveClassName(string $ref): string
+    protected function collectArrayOf(string $name, ReflectionProperty $property): bool
     {
-        if (class_exists($ref)) {
-            return $ref;
-        }
-        if (str_starts_with($ref, '#/')) {
-            $ref = substr($ref, (int) strrpos($ref, '/') + 1);
-        }
-        $namespace = (new ReflectionClass($this))->getNamespaceName();
+        foreach ($property->getAttributes(ViewObject::class) as $attribute) {
+            $class = $attribute->newInstance()->class;
+            if ($this->isNestedVo($class)) {
+                $this->voItemCasts[$name] = $class;
 
-        return str_contains($ref, '\\') ? $ref : $namespace . '\\' . $ref;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
