@@ -10,7 +10,7 @@ declare(strict_types=1);
  */
 
 
-namespace Kooditorm\Hyperf\Basic\DTO;
+namespace Kooditorm\Hyperf\Basic;
 
 use ArrayAccess;
 use Hyperf\Contract\Arrayable;

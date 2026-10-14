@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @license  https://github.com/Kooditorm/hyperf-basict/blob/master/LICENSE
  */
 
-namespace Kooditorm\Hyperf\Basic\Services;
+namespace Kooditorm\Hyperf\Basic;
 
 class BaseService
 {

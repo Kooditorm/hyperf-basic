@@ -10,18 +10,18 @@ declare(strict_types=1);
  * @license  https://github.com/Kooditorm/hyperf-basict/blob/master/LICENSE
  */
 
-namespace Kooditorm\Hyperf\Basic\VO;
+namespace Kooditorm\Hyperf\Basic;
 
 use ArrayAccess;
 use Hyperf\Contract\Arrayable;
 use Hyperf\Contract\Jsonable;
 use JsonSerializable;
+use Kooditorm\Hyperf\Basic\Annotations\ViewObject;
 use Kooditorm\Hyperf\Basic\Traits\HasAttributes;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionProperty;
 use Traversable;
-use Kooditorm\Hyperf\Basic\Annotations\ViewObject;
 
 /**
  * VO 基类（View Object）。
