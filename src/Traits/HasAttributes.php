@@ -15,6 +15,7 @@ namespace Kooditorm\Hyperf\Basic\Traits;
 use Hyperf\Contract\Arrayable;
 use JsonException;
 use ReflectionClass;
+use ReflectionProperty;
 use function Hyperf\Collection\collect;
 
 /**
@@ -197,7 +198,7 @@ trait HasAttributes
         $properties = [];
 
         foreach ($reflection->getProperties() as $property) {
-            if ($property->isPublic() && $property->getDeclaringClass()->getName() === $this::class) {
+            if ($property->isPublic() && $this->isOwnProperty($property)) {
                 $properties[$property->getName()] = $property->isInitialized($this)
                     ? $property->getValue($this)
                     : null;
@@ -205,6 +206,22 @@ trait HasAttributes
         }
 
         return $properties;
+    }
+
+    /**
+     * 属性是否参与填充：当前类自身声明，或继承自中间基类（如 AbstractPaginateVo）。
+     *
+     * 顶层基类（AbstractBaseVo / AbstractBaseDTO，即本 trait 的使用类）自身声明的
+     * 属性不参与，避免把容器字段混进业务字段白名单。
+     */
+    protected function isOwnProperty(ReflectionProperty $property): bool
+    {
+        $declaring = $property->getDeclaringClass()->getName();
+        if ($declaring === self::class) {
+            return false;
+        }
+
+        return $declaring === $this::class || is_subclass_of($this::class, $declaring);
     }
 
     /**

@@ -29,7 +29,7 @@ use Traversable;
  * 面向接口返回的展示对象，数据来源由业务层传入，不依赖请求上下文。
  * 支持按属性声明的类型自动把数组转换成嵌套 VO，字段由目标 VO 的白名单过滤。
  */
-abstract class AbstractBaseVo implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
+class AbstractBaseVo implements Arrayable, Jsonable, JsonSerializable, ArrayAccess
 {
     use HasAttributes;
 
@@ -108,7 +108,7 @@ abstract class AbstractBaseVo implements Jsonable, Arrayable, ArrayAccess, JsonS
     {
         $reflection = new ReflectionClass($this);
         foreach ($reflection->getProperties() as $property) {
-            if (! $property->isPublic() || $property->getDeclaringClass()->getName() !== $this::class) {
+            if (! $property->isPublic() || ! $this->isOwnProperty($property)) {
                 continue;
             }
 
