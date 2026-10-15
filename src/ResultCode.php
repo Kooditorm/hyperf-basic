@@ -23,7 +23,6 @@ enum ResultCode: int
 {
     use ConstantsTrait;
 
-
     #[Message('result.success')]
     case SUCCESS = 200;
 
