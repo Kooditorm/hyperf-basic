@@ -25,5 +25,10 @@
         "psr-4": {
             "Kooditorm\\Hyperf\\Basic\\": "src/"
         }
+    },
+    "extra": {
+        "hyperf": {
+            "config": "Kooditorm\\Hyperf\\Basic\\ConfigProvider"
+        }
     }
 }
