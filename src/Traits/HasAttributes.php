@@ -14,6 +14,7 @@ namespace Kooditorm\Hyperf\Basic\Traits;
 
 use Hyperf\Contract\Arrayable;
 use JsonException;
+use Kooditorm\Hyperf\Basic\Annotations\VoTransform;
 use ReflectionClass;
 use ReflectionProperty;
 use function Hyperf\Collection\collect;
@@ -40,6 +41,9 @@ trait HasAttributes
     /** 允许被外部数据赋值的字段白名单 */
     protected array $accessFields = [];
 
+    /** 字段重命名映射：[外部字段名 => 属性名] */
+    protected array $fieldMap = [];
+
     /**
      * 数据来源
      */
@@ -55,10 +59,25 @@ trait HasAttributes
             return;
         }
         foreach ($properties as $key => $defaultValue) {
-            if (! is_null($defaultValue)) {
+            if (!is_null($defaultValue)) {
                 $this->property[$key] = $defaultValue;
             }
             $this->accessFields[] = $key;
+        }
+    }
+
+    /**
+     * 收集字段重命名映射：#[VoTransform('new Field')]
+     *
+     * @return void
+     */
+    protected function collectFieldMaps(): void
+    {
+        $reflection = new ReflectionClass($this);
+        foreach ($reflection->getProperties() as $property) {
+            foreach ($property->getAttributes(VoTransform::class) as $attribute) {
+                $this->fieldMap[$attribute->newInstance()->from] = $property->getName();
+            }
         }
     }
 
@@ -231,14 +250,25 @@ trait HasAttributes
      */
     protected function loadAttrs(): void
     {
-        collect($this->source())->map(function ($value, $key) {
-            if (in_array($key, $this->accessFields, true)) {
+        $source = $this->source();
+
+        // 1) 同名字段直接落位
+        foreach ($source as $key => $value) {
+            if (!isset($this->fieldMap[$key]) && in_array($key, $this->accessFields, true)) {
                 $this->attributes[$key] = $this->castValue($key, $value);
             }
-        });
+        }
+
+        // 2) 重命名字段：同名字段已存在时不覆盖，别名只做兜底
+        foreach ($source as $key => $value) {
+            $field = $this->fieldMap[$key] ?? null;
+            if (!isset($this->attributes[$field]) && !is_null($field) && in_array($field, $this->accessFields, true)) {
+                $this->attributes[$field] = $this->castValue($field, $value);
+            }
+        }
 
         foreach ($this->getProperties() as $key => $defaultValue) {
-            if (! empty($defaultValue) && (! isset($this->property[$key]) || $this->property[$key] !== $defaultValue)) {
+            if (!empty($defaultValue) && (!isset($this->property[$key]) || $this->property[$key] !== $defaultValue)) {
                 $this->attributes[$key] = $defaultValue;
             }
         }
