@@ -12,12 +12,17 @@ declare(strict_types=1);
 
 namespace Kooditorm\Hyperf\Basic;
 
+use Hyperf\Swagger\Generator as HyperfGenerator;
+use Kooditorm\Hyperf\Basic\Swagger\Generator;
+
 class ConfigProvider
 {
     public function __invoke(): array
     {
         return [
-            'dependencies' => [],
+            'dependencies' => [
+                HyperfGenerator::class => Generator::class
+            ],
             'commands' => [],
             'annotations' => [
                 'scan' => [
