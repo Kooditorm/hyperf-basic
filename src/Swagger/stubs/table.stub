@@ -1,0 +1,2181 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SwaggerUI</title>
+    <style>
+        * {
+            box-sizing: border-box
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font: 13px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: #333;
+            background: #fff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---------- 顶栏 ---------- */
+        :root {
+            --hdr: 56px
+        }
+
+        body {
+            padding-top: var(--hdr)
+        }
+
+        .hdr {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--hdr);
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 0 20px;
+            background: #fff;
+            border-bottom: 1px solid #e6ebf3;
+        }
+
+        /* 顶栏 logo：原始 SVG 为深色底专用（字是白色），
+           白色背景上会“隐身”，所以外面套一块深色圆角底，并用 flex 保证垂直居中 */
+        .hdr .link {
+            display: inline-flex;
+            align-items: center;
+            flex: 0 0 auto;
+            height: 40px;
+            color: #173647; /* <- logo 文字颜色，改这一个值即可 */
+            text-decoration: none
+        }
+
+        .hdr .link .logo {
+            display: block;
+            height: 34px;
+            width: auto
+        }
+
+        .hdr .link:hover {
+            color: #0b2231
+        }
+
+        /* 文档标题 / 描述归到左侧菜单顶部 */
+        .sidebar .brand {
+            padding: 0 14px 10px
+        }
+
+        .sidebar .brand #ver {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #1f2329;
+            line-height: 1.3;
+            white-space: normal;
+            word-break: break-word;
+            overflow: hidden;
+        }
+
+        .sidebar .brand small {
+            display: block;
+            font-size: 11px;
+            color: #98a2b3;
+            font-weight: 400;
+            line-height: 1.5;
+            margin-top: 3px;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .hdr .tb {
+            flex: 0 0 auto;
+            min-width: 0
+        }
+
+        .hdr .tb.mb-base {
+            flex: 1 1 320px;
+            min-width: 150px;
+            max-width: 520px
+        }
+
+        .hdr .tb.mb-base select {
+            flex: 1 1 auto;
+            width: auto;
+            max-width: none;
+            min-width: 120px
+        }
+
+        .hdr .acts-right {
+            margin-left: auto;
+            flex: 0 0 auto
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - var(--hdr));
+            align-items: flex-start
+        }
+
+        /* ---------- 左侧导航 ---------- */
+        .sidebar {
+            width: 236px;
+            flex: 0 0 236px;
+            position: sticky;
+            top: var(--hdr);
+            height: calc(100vh - var(--hdr));
+            overflow: auto;
+            border-right: 1px solid #eef0f4;
+            background: #fafbfc;
+            padding: 14px 0 40px;
+        }
+
+        #q {
+            display: block;
+            margin: 12px 12px 8px;
+            width: calc(100% - 24px);
+            padding: 5px 8px;
+            border: 1px solid #dcdfe6;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #333;
+            background: #fff;
+            outline: none;
+        }
+
+        #q:focus {
+            border-color: #8fb4ee;
+            box-shadow: 0 0 0 2px rgba(59, 125, 221, .1)
+        }
+
+        #nav .tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            color: #5f6b7a;
+            padding: 12px 16px 5px;
+            font-weight: 600;
+            letter-spacing: .3px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        #nav .tag:hover {
+            color: #1c4fa1
+        }
+
+        #nav .tag .caret {
+            border-top-color: #a8b0bb
+        }
+
+        #nav .tag .g-count {
+            margin-left: auto;
+            font-size: 10.5px;
+            color: #98a2b3;
+            background: #eef1f5;
+            border-radius: 8px;
+            padding: 0 6px;
+            line-height: 15px;
+            font-weight: 400;
+        }
+
+        #nav a {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            padding: 5px 16px 5px 32px;
+            color: #3d4652;
+            text-decoration: none;
+            font-size: 12.5px;
+            border-left: 2px solid transparent;
+        }
+
+        #nav a span.t {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        #nav a:hover {
+            background: #f0f4fb
+        }
+
+        #nav a.active {
+            background: #eaf1fd;
+            border-left-color: #3b7ddd;
+            color: #1c4fa1
+        }
+
+        .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            flex: 0 0 5px;
+            background: #c6cdd8
+        }
+
+        .dot.get {
+            background: #1a9d63
+        }
+
+        .dot.post {
+            background: #2f6fdb
+        }
+
+        .dot.put {
+            background: #c98708
+        }
+
+        .dot.delete {
+            background: #d64545
+        }
+
+        .dot.patch {
+            background: #7a5af8
+        }
+
+        /* ---------- 正文 ---------- */
+        /* 默认：内容在右侧区域水平居中，最大 1200px */
+        .main {
+            flex: 1;
+            min-width: 0;
+            padding: 26px 40px 120px;
+            display: flex;
+            justify-content: center
+        }
+
+        .doc {
+            width: 100%;
+            max-width: 1200px
+        }
+
+        /* 全屏：铺满整个剩余宽度 */
+        html.full .main {
+            justify-content: flex-start;
+            padding: 26px 28px 120px
+        }
+
+        html.full .title {
+            color: #3b4151;
+            font-family: sans-serif;
+            font-size: 36px;
+            text-align: center
+        }
+
+        html.full .doc {
+            max-width: none
+        }
+
+        /* ---------- 顶栏工具（Base / Token / 文档） ---------- */
+        .tb {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #5a6373;
+            white-space: nowrap
+        }
+
+        .tb input, .tb select {
+            border: 1px solid #dcdfe6;
+            border-radius: 3px;
+            padding: 5px 8px;
+            font-size: 12px;
+            color: #333;
+            background: #fff;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .tb input {
+            width: 210px;
+            font-family: ui-monospace, Consolas, monospace
+        }
+
+        .tb input#token {
+            width: 150px
+        }
+
+        .tb select {
+            width: auto;
+            max-width: 220px
+        }
+
+        .tb input:focus, .tb select:focus {
+            border-color: #8fb4ee;
+            box-shadow: 0 0 0 2px rgba(59, 125, 221, .08)
+        }
+
+        .tb .sp {
+            flex: 1
+        }
+
+        .tb.acts-right {
+            margin-left: auto;
+            gap: 6px
+        }
+
+        .hdr .tb input {
+            width: 230px
+        }
+
+        .hdr .tb input#token {
+            width: 160px
+        }
+
+        /* ---------- 标签分组 ---------- */
+        .group {
+            margin: 0 0 4px
+        }
+
+        .group-h {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 0 8px;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid #e6ebf3;
+            margin-bottom: 16px;
+        }
+
+        .group-h:hover .g-name {
+            color: #1c4fa1
+        }
+
+        .g-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2b3440;
+            letter-spacing: .2px
+        }
+
+        .g-count {
+            font-size: 11px;
+            color: #98a2b3;
+            background: #f2f4f7;
+            border-radius: 9px;
+            padding: 0 7px;
+            line-height: 17px;
+            font-weight: 400
+        }
+
+        .group.collapsed .group-b {
+            display: none
+        }
+
+        .caret {
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid #98a2b3;
+            transition: transform .15s ease;
+            flex: 0 0 auto;
+        }
+
+        .collapsed .caret {
+            transform: rotate(-90deg)
+        }
+
+        .api {
+            padding: 0 0 4px;
+            margin: 0 0 18px;
+            border-bottom: 1px dashed #f2f4f7
+        }
+
+        .api:last-child {
+            border-bottom: 0;
+            margin-bottom: 0
+        }
+
+        h2.api-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            color: #1f2329;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            cursor: pointer;
+            user-select: none;
+            padding: 2px 0;
+        }
+
+        h2.api-title:hover .api-name {
+            color: #1c4fa1
+        }
+
+        .api-body {
+            padding-top: 10px
+        }
+
+        .api.collapsed .api-body {
+            display: none
+        }
+
+        .api-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 400;
+            font-size: 11.5px;
+            color: #6b7280
+        }
+
+        .auth-tog {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            white-space: nowrap
+        }
+
+        .auth-tog input {
+            margin: 0;
+            cursor: pointer
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 0 6px;
+            border-radius: 3px;
+            line-height: 17px;
+            display: inline-block
+        }
+
+        .badge.auth {
+            background: #fdf4e7;
+            color: #b07000;
+            border: 1px solid #f3e0be
+        }
+
+        .m {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 3px;
+            color: #fff;
+            letter-spacing: .4px;
+            line-height: 1.5
+        }
+
+        .m.get {
+            background: #1a9d63
+        }
+
+        .m.post {
+            background: #2f6fdb
+        }
+
+        .m.put {
+            background: #c98708
+        }
+
+        .m.delete {
+            background: #d64545
+        }
+
+        .m.patch {
+            background: #7a5af8
+        }
+
+        .m.head, .m.options {
+            background: #6b7280
+        }
+
+        .path {
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+            font-size: 12.5px;
+            color: #6b7280;
+            font-weight: 400
+        }
+
+        .desc {
+            margin: 4px 0 16px;
+            color: #6b7280;
+            font-size: 12.5px;
+            max-width: 820px
+        }
+
+        /* ---------- 文档表格 ---------- */
+        .tbl {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin: 0 0 20px;
+            background: #fff
+        }
+
+        .tbl td {
+            border: 1px solid #e3e7ee;
+            padding: 8px 10px;
+            vertical-align: middle;
+            word-break: break-word
+        }
+
+        .tbl .thead td {
+            background: #eaf2fd;
+            color: #2b3440;
+            font-weight: 600
+        }
+
+        .tbl .th td {
+            background: #f3f7fd;
+            color: #4a5464;
+            font-weight: 600
+        }
+
+        .tbl .lb {
+            width: 150px;
+            color: #4a5464;
+            background: #fff
+        }
+
+        .tbl .grp td {
+            background: #f7f9fc;
+            color: #5a6373;
+            font-weight: 600
+        }
+
+        .tbl .grp[data-act] td {
+            cursor: pointer;
+            user-select: none
+        }
+
+        .tbl .grp[data-act]:hover td {
+            background: #eef4fc
+        }
+
+        .tbl .grp .grp-l {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.3
+        }
+
+        .tbl .grp .grp-l .caret {
+            flex: 0 0 auto
+        }
+
+        .tbl .grp.folded .caret {
+            transform: rotate(-90deg)
+        }
+
+        .tbl .grp .cnt {
+            font-weight: 400;
+            color: #98a2b3;
+            font-size: 11.5px;
+            line-height: 1
+        }
+
+        .tbl .sub td:first-child {
+            padding-left: 26px
+        }
+
+        .tbl .note {
+            font-weight: 400;
+            color: #8a929e;
+            font-size: 11.5px;
+            margin-left: 6px
+        }
+
+        .tbl .muted {
+            color: #a0a7b2
+        }
+
+        .code {
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+            font-size: 12px;
+            color: #3d4652
+        }
+
+        /* 表格内：全部展开/收起 */
+        .fold-all {
+            float: right;
+            font-weight: 400;
+            font-size: 11.5px;
+            color: #2f6fdb;
+            cursor: pointer;
+            user-select: none;
+            padding: 1px 6px;
+            border: 1px solid #cfe0f8;
+            border-radius: 3px;
+            background: #fff;
+        }
+
+        .fold-all:hover {
+            background: #eaf2fd
+        }
+
+        /* 描述列过长折叠 */
+        .dcell {
+            position: relative
+        }
+
+        .dcell .dtxt {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            padding-right: 38px
+        }
+
+        .dcell.open .dtxt {
+            display: block;
+            overflow: visible;
+            padding-right: 0
+        }
+
+        .dmore {
+            color: #2f6fdb;
+            font-size: 11.5px;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            position: absolute;
+            right: 8px;
+            bottom: 7px;
+            background: #fff;
+            padding-left: 4px;
+        }
+
+        .dcell.open .dmore {
+            position: static;
+            display: inline-block;
+            margin-top: 2px;
+            padding-left: 0
+        }
+
+        .dmore:hover {
+            text-decoration: underline
+        }
+
+        /* ---------- 在线调试 ---------- */
+        .try {
+            border: 1px solid #e3e7ee;
+            border-radius: 4px;
+            margin: 0 0 20px;
+            overflow: hidden
+        }
+
+        .try-h {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #f7f9fc;
+            border-bottom: 1px solid #e3e7ee;
+            font-weight: 600;
+            color: #2b3440;
+            font-size: 12.5px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .try-h:hover {
+            background: #f1f6fd
+        }
+
+        .try-h .tl {
+            display: flex;
+            align-items: center;
+            gap: 7px
+        }
+
+        .try-h .hint {
+            font-weight: 400;
+            color: #98a2b3;
+            font-size: 11.5px
+        }
+
+        .try.collapsed .try-b {
+            display: none
+        }
+
+        .try.collapsed .try-h {
+            border-bottom: 0
+        }
+
+        .try-b {
+            padding: 12px
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            margin-bottom: 10px
+        }
+
+        .row > label {
+            width: 76px;
+            flex: 0 0 76px;
+            font-size: 12px;
+            color: #5a6373;
+            line-height: 28px
+        }
+
+        .row .ctl {
+            flex: 1;
+            min-width: 0
+        }
+
+        .row input[type=text], .row textarea {
+            width: 100%;
+            border: 1px solid #dcdfe6;
+            border-radius: 3px;
+            padding: 6px 8px;
+            font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace;
+            color: #333;
+            background: #fff;
+            outline: none;
+        }
+
+        .row textarea {
+            resize: vertical;
+            min-height: 70px
+        }
+
+        .row input:focus, .row textarea:focus {
+            border-color: #8fb4ee;
+            box-shadow: 0 0 0 2px rgba(59, 125, 221, .08)
+        }
+
+        .row .req {
+            color: #d64545;
+            margin-left: 2px
+        }
+
+        .row .tip {
+            font-size: 11.5px;
+            color: #98a2b3;
+            margin-top: 3px
+        }
+
+        .acts {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 2px
+        }
+
+        .btn {
+            background: #2f6fdb;
+            color: #fff;
+            border: 0;
+            border-radius: 3px;
+            padding: 7px 16px;
+            font-size: 12.5px;
+            cursor: pointer;
+            font-family: inherit
+        }
+
+        .btn:hover {
+            background: #2a63c4
+        }
+
+        .btn:disabled {
+            background: #a8bde2;
+            cursor: not-allowed
+        }
+
+        .btn.ghost {
+            background: #fff;
+            color: #4a5464;
+            border: 1px solid #dcdfe6
+        }
+
+        .btn.ghost:hover {
+            background: #f7f9fc
+        }
+
+        .btn.mini {
+            padding: 2px 8px;
+            font-size: 11.5px
+        }
+
+        .resp {
+            margin-top: 12px;
+            border-top: 1px dashed #e8ecf2;
+            padding-top: 10px;
+            display: none
+        }
+
+        .resp-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #6b7280;
+            flex-wrap: wrap
+        }
+
+        .st {
+            padding: 1px 7px;
+            border-radius: 3px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 11.5px;
+            background: #6b7280
+        }
+
+        .st.ok {
+            background: #1a9d63
+        }
+
+        .st.redir {
+            background: #2f6fdb
+        }
+
+        .st.warn {
+            background: #c98708
+        }
+
+        .st.err {
+            background: #d64545
+        }
+
+        pre.resp-body {
+            margin: 0;
+            background: #fafbfc;
+            border: 1px solid #eef0f4;
+            border-radius: 3px;
+            padding: 10px;
+            font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace;
+            color: #3d4652;
+            max-height: 420px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .err-tip {
+            border: 1px solid #f3d1d1;
+            background: #fdf5f5;
+            color: #b53c3c;
+            padding: 9px 11px;
+            border-radius: 3px;
+            font-size: 12px;
+            line-height: 1.7
+        }
+
+        .warn-tip {
+            display: none;
+            margin: 0 0 10px;
+            padding: 7px 10px;
+            border: 1px solid #f6e2bd;
+            background: #fdf8ee;
+            color: #96650a;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .err-tip code {
+            background: #fdeaea;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-size: 11.5px
+        }
+
+        .empty {
+            padding: 60px 0;
+            color: #98a2b3;
+            text-align: center
+        }
+
+        .bucket {
+            margin: 22px 0;
+            padding: 12px 14px;
+            border: 1px solid #f3d1d1;
+            background: #fdf5f5;
+            color: #b53c3c;
+            border-radius: 3px;
+            font-size: 12.5px;
+            text-align: center
+        }
+
+        @media (max-width: 1280px) {
+            .hdr .tb input#token {
+                width: 110px
+            }
+
+            .hdr .tb select {
+                max-width: 170px
+            }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                display: none
+            }
+
+            .main {
+                padding: 16px 16px 80px
+            }
+
+            .tbl .lb {
+                width: 110px
+            }
+
+            .hdr {
+                padding: 0 12px;
+                gap: 8px
+            }
+
+            .hdr .tb.mb-base {
+                min-width: 96px;
+                flex: 1 1 120px
+            }
+
+            .hdr .tb input {
+                width: 150px
+            }
+
+            .hdr .tb input#token {
+                width: 96px
+            }
+
+            .tb input {
+                width: 150px
+            }
+        }
+    </style>
+    <script>
+        // 布局偏好在首屏渲染前应用，避免切换时闪一下
+        try {
+            if (localStorage.getItem('apidoc.layout') === 'full') {
+                document.documentElement.classList.add('full');
+            }
+        } catch (e) {
+        }
+    </script>
+</head>
+<body>
+<header class="hdr">
+    <a rel="noopener noreferrer" class="link" title="Swagger">
+        <svg class="logo" viewBox="0 0 407 116" role="img" aria-label="Swagger" xmlns="http://www.w3.org/2000/svg">
+            <g id="SW_TM-logo-on-dark">
+                <g id="SW_In-Product" transform="translate(-0.301)">
+                    <path id="Path_2936" data-name="Path 2936" fill="currentColor" d="M359.15,70.674h-.7V66.992h-1.26v-.6h3.219v.6H359.15Z"/>
+                    <path id="Path_2937" data-name="Path 2937" fill="currentColor" d="M363.217,70.674,361.975,67.1h-.023q.05.8.05,1.494v2.083h-.636V66.391h.987l1.19,3.407h.017l1.225-3.407h.99v4.283H365.1V68.556c0-.213.006-.49.016-.832s.02-.549.028-.621h-.023l-1.286,3.571Z"/>
+                    <path id="Path_2938" data-name="Path 2938" fill="#85ea2d" d="M50.328,97.669A47.642,47.642,0,1,1,97.971,50.027,47.642,47.642,0,0,1,50.328,97.669Z"/>
+                    <path id="Path_2939" data-name="Path 2939" fill="#85ea2d" d="M50.328,4.769A45.258,45.258,0,1,1,5.07,50.027,45.258,45.258,0,0,1,50.328,4.769m0-4.769a50.027,50.027,0,1,0,50.027,50.027A50.027,50.027,0,0,0,50.328,0Z"/>
+                    <path id="Path_2940" data-name="Path 2940" fill="#173647" d="M31.8,33.854c-.154,1.712.058,3.482-.057,5.213a42.665,42.665,0,0,1-.693,5.156,9.53,9.53,0,0,1-4.1,5.829c4.079,2.654,4.54,6.771,4.81,10.946.135,2.25.077,4.52.308,6.752.173,1.731.846,2.174,2.636,2.231.73.02,1.48,0,2.327,0V75.33c-5.29.9-9.657-.6-10.734-5.079a30.76,30.76,0,0,1-.654-5c-.117-1.789.076-3.578-.058-5.367-.386-4.906-1.02-6.56-5.713-6.791v-6.1A9.191,9.191,0,0,1,20.9,46.82c2.577-.135,3.674-.924,4.231-3.463a29.3,29.3,0,0,0,.481-4.329,82.1,82.1,0,0,1,.6-8.406c.673-3.982,3.136-5.906,7.234-6.137,1.154-.057,2.327,0,3.655,0v5.464c-.558.038-1.039.115-1.539.115C32.226,29.949,32.052,31.084,31.8,33.854Zm6.406,12.658h-.077a3.515,3.515,0,1,0-.346,7.021h.231a3.461,3.461,0,0,0,3.655-3.251V50.09a3.523,3.523,0,0,0-3.461-3.578Zm12.062,0a3.373,3.373,0,0,0-3.482,3.251,1.79,1.79,0,0,0,.02.327,3.3,3.3,0,0,0,3.578,3.443,3.263,3.263,0,0,0,3.443-3.558,3.308,3.308,0,0,0-3.557-3.463Zm12.351,0a3.592,3.592,0,0,0-3.655,3.482A3.529,3.529,0,0,0,62.5,53.533h.039c1.769.309,3.559-1.4,3.674-3.462a3.571,3.571,0,0,0-3.6-3.559Zm16.948.288c-2.232-.1-3.348-.846-3.9-2.962a21.447,21.447,0,0,1-.635-4.136c-.154-2.578-.135-5.175-.308-7.753-.4-6.117-4.828-8.252-11.254-7.195v5.31c1.019,0,1.808,0,2.6.019,1.366.019,2.4.539,2.539,2.059.135,1.385.135,2.789.27,4.193.269,2.79.422,5.618.9,8.369A8.715,8.715,0,0,0,73.7,50.052c-3.4,2.289-4.406,5.559-4.578,9.234-.1,2.52-.154,5.059-.289,7.6-.115,2.308-.923,3.058-3.251,3.116-.654.019-1.289.077-2.019.115v5.445c1.365,0,2.616.077,3.866,0,3.886-.231,6.233-2.117,7-5.887A49.079,49.079,0,0,0,75,63.4c.135-1.923.116-3.866.308-5.771.289-2.982,1.655-4.213,4.636-4.4a4.037,4.037,0,0,0,.828-.192v-6.1c-.5-.058-.843-.115-1.208-.135Z"/>
+                    <path id="Path_2941" data-name="Path 2941" fill="currentColor" d="M152.273,58.122a11.228,11.228,0,0,1-4.384,9.424q-4.383,3.382-11.9,3.382-8.14,0-12.524-2.1V63.7a32.9,32.9,0,0,0,6.137,1.879,32.3,32.3,0,0,0,6.575.689q5.322,0,8.015-2.02a6.626,6.626,0,0,0,2.692-5.62,7.222,7.222,0,0,0-.954-3.9,8.885,8.885,0,0,0-3.194-2.8,44.634,44.634,0,0,0-6.81-2.911q-6.387-2.286-9.126-5.417a11.955,11.955,0,0,1-2.74-8.172A10.164,10.164,0,0,1,128.039,27q3.977-3.131,10.52-3.131a31,31,0,0,1,12.555,2.5L149.455,31a28.382,28.382,0,0,0-11.021-2.38,10.668,10.668,0,0,0-6.606,1.816,5.984,5.984,0,0,0-2.38,5.041,7.722,7.722,0,0,0,.877,3.9,8.242,8.242,0,0,0,2.959,2.786,36.7,36.7,0,0,0,6.371,2.8q7.2,2.566,9.91,5.51A10.84,10.84,0,0,1,152.273,58.122Z"/>
+                    <path id="Path_2942" data-name="Path 2942" fill="currentColor" d="M185.288,70.3,179,50.17q-.594-1.848-2.222-8.391h-.251q-1.252,5.479-2.192,8.453L167.849,70.3h-6.011l-9.361-34.315h5.447q3.318,12.931,5.057,19.693a80.112,80.112,0,0,1,1.988,9.111h.25q.345-1.785,1.112-4.618t1.33-4.493l6.294-19.693h5.635l6.137,19.693a66.369,66.369,0,0,1,2.379,9.048h.251a33.163,33.163,0,0,1,.673-3.475q.548-2.347,6.528-25.266h5.385L191.456,70.3Z"/>
+                    <path id="Path_2943" data-name="Path 2943" fill="currentColor" d="M225.115,70.3l-1.033-4.885h-.25a14.446,14.446,0,0,1-5.119,4.368,15.608,15.608,0,0,1-6.372,1.143q-5.1,0-8-2.63t-2.9-7.483q0-10.4,16.626-10.9l5.823-.188V47.6q0-4.038-1.738-5.964T216.6,39.713a22.633,22.633,0,0,0-9.706,2.63l-1.6-3.977a24.437,24.437,0,0,1,5.557-2.16,24.056,24.056,0,0,1,6.058-.783q6.136,0,9.1,2.724t2.959,8.735V70.3Zm-11.741-3.663A10.549,10.549,0,0,0,221,63.977a9.845,9.845,0,0,0,2.771-7.451v-3.1l-5.2.219q-6.2.219-8.939,1.926a5.8,5.8,0,0,0-2.74,5.306,5.354,5.354,0,0,0,1.707,4.29,7.081,7.081,0,0,0,4.775,1.472Z"/>
+                    <path id="Path_2944" data-name="Path 2944" fill="currentColor" d="M264.6,35.987v3.287l-6.356.752a11.16,11.16,0,0,1,2.255,6.856,10.148,10.148,0,0,1-3.444,8.047q-3.444,3-9.456,3a15.734,15.734,0,0,1-2.88-.25Q241.4,59.438,241.4,62.1a2.242,2.242,0,0,0,1.159,2.082,8.456,8.456,0,0,0,3.976.673h6.074q5.573,0,8.563,2.348a8.158,8.158,0,0,1,2.99,6.825,9.743,9.743,0,0,1-4.571,8.688q-4.572,2.989-13.338,2.99-6.732,0-10.379-2.5a8.087,8.087,0,0,1-3.647-7.076,7.946,7.946,0,0,1,2-5.417,10.211,10.211,0,0,1,5.636-3.1,5.429,5.429,0,0,1-2.207-1.847,4.89,4.89,0,0,1-.893-2.912,5.53,5.53,0,0,1,1-3.288,10.529,10.529,0,0,1,3.162-2.723,9.275,9.275,0,0,1-4.336-3.726,10.945,10.945,0,0,1-1.675-6.012q0-5.634,3.382-8.688t9.58-3.052a17.439,17.439,0,0,1,4.853.626ZM237.233,76.062a4.66,4.66,0,0,0,2.348,4.227,12.973,12.973,0,0,0,6.732,1.44q6.543,0,9.69-1.956a5.992,5.992,0,0,0,3.147-5.307q0-2.787-1.723-3.867t-6.481-1.08h-6.23a8.205,8.205,0,0,0-5.51,1.69,6.043,6.043,0,0,0-1.973,4.853Zm2.818-29.086a6.984,6.984,0,0,0,2.035,5.448,8.123,8.123,0,0,0,5.667,1.847q7.608,0,7.608-7.389,0-7.733-7.7-7.733a7.628,7.628,0,0,0-5.635,1.972q-1.976,1.973-1.975,5.855Z"/>
+                    <path id="Path_2945" data-name="Path 2945" fill="currentColor" d="M299.136,35.987v3.287l-6.356.752a11.168,11.168,0,0,1,2.254,6.856,10.145,10.145,0,0,1-3.444,8.047q-3.444,3-9.455,3a15.734,15.734,0,0,1-2.88-.25q-3.32,1.754-3.319,4.415a2.243,2.243,0,0,0,1.158,2.082,8.459,8.459,0,0,0,3.976.673h6.074q5.574,0,8.563,2.348a8.158,8.158,0,0,1,2.99,6.825,9.743,9.743,0,0,1-4.571,8.688q-4.57,2.989-13.337,2.99-6.732,0-10.379-2.5a8.088,8.088,0,0,1-3.648-7.076,7.947,7.947,0,0,1,2-5.417,10.207,10.207,0,0,1,5.636-3.1,5.432,5.432,0,0,1-2.208-1.847,4.889,4.889,0,0,1-.892-2.912,5.53,5.53,0,0,1,1-3.288,10.529,10.529,0,0,1,3.162-2.723,9.271,9.271,0,0,1-4.336-3.726,10.945,10.945,0,0,1-1.675-6.012q0-5.634,3.381-8.688t9.581-3.052a17.444,17.444,0,0,1,4.853.626ZM271.772,76.062a4.658,4.658,0,0,0,2.348,4.227,12.969,12.969,0,0,0,6.731,1.44q6.544,0,9.691-1.956a5.993,5.993,0,0,0,3.146-5.307q0-2.787-1.722-3.867t-6.481-1.08h-6.23a8.208,8.208,0,0,0-5.511,1.69A6.042,6.042,0,0,0,271.772,76.062Zm2.818-29.086a6.984,6.984,0,0,0,2.035,5.448,8.121,8.121,0,0,0,5.667,1.847q7.607,0,7.608-7.389,0-7.733-7.7-7.733a7.629,7.629,0,0,0-5.635,1.972q-1.975,1.973-1.975,5.855Z"/>
+                    <path id="Path_2946" data-name="Path 2946" fill="currentColor" d="M316.778,70.928q-7.608,0-12.007-4.634t-4.4-12.868q0-8.3,4.086-13.181a13.573,13.573,0,0,1,10.974-4.884A12.938,12.938,0,0,1,325.638,39.6q3.762,4.247,3.762,11.2v3.287H305.757q.156,6.044,3.053,9.174t8.156,3.131a27.633,27.633,0,0,0,10.958-2.317v4.634a27.5,27.5,0,0,1-5.213,1.706,29.251,29.251,0,0,1-5.933.513Zm-1.409-31.215a8.489,8.489,0,0,0-6.591,2.692,12.416,12.416,0,0,0-2.9,7.452h17.94q0-4.916-2.191-7.53a7.714,7.714,0,0,0-6.258-2.614Z"/>
+                    <path id="Path_2947" data-name="Path 2947" fill="currentColor" d="M350.9,35.361a20.38,20.38,0,0,1,4.1.375l-.721,4.822a17.712,17.712,0,0,0-3.757-.47A9.142,9.142,0,0,0,343.4,43.47a12.327,12.327,0,0,0-2.959,8.422V70.3h-5.2V35.987h4.29l.6,6.356h.25a15.072,15.072,0,0,1,4.6-5.166,10.356,10.356,0,0,1,5.919-1.816Z"/>
+                    <path id="Path_2948" data-name="Path 2948" fill="currentColor" d="M255.857,96.638s-3.43-.391-4.85-.391c-2.058,0-3.111.735-3.111,2.18,0,1.568.882,1.935,3.748,2.719,3.527.98,4.8,1.911,4.8,4.777,0,3.675-2.3,5.267-5.61,5.267a35.687,35.687,0,0,1-5.487-.662l.27-2.18s3.306.441,5.046.441c2.082,0,3.037-.931,3.037-2.7,0-1.421-.759-1.91-3.331-2.523-3.626-.93-5.193-2.033-5.193-4.948,0-3.381,2.229-4.776,5.585-4.776a37.2,37.2,0,0,1,5.315.587Z"/>
+                    <path id="Path_2949" data-name="Path 2949" fill="currentColor" d="M262.967,94.14H267.7l3.748,13.106L275.2,94.14h4.752v16.78H277.2V96.42h-.145l-4.191,13.816h-2.842L265.831,96.42h-.145v14.5h-2.719Z"/>
+                    <path id="Path_2950" data-name="Path 2950" fill="currentColor" d="M322.057,94.14H334.3v2.425h-4.728V110.92h-2.743V96.565h-4.777Z"/>
+                    <path id="Path_2951" data-name="Path 2951" fill="currentColor" d="M346.137,94.14c3.332,0,5.12,1.249,5.12,4.361,0,2.033-.637,3.037-1.984,3.772,1.445.563,2.4,1.592,2.4,3.9,0,3.43-2.081,4.752-5.339,4.752h-6.566V94.14Zm-3.65,2.352v4.8h3.6c1.666,0,2.4-.832,2.4-2.474,0-1.617-.833-2.327-2.5-2.327Zm0,7.1v4.973h3.7c1.689,0,2.694-.539,2.694-2.548,0-1.911-1.421-2.425-2.744-2.425Z"/>
+                    <path id="Path_2952" data-name="Path 2952" fill="currentColor" d="M358.414,94.14H369v2.377h-7.864v4.751h6.394V103.6h-6.394v4.924H369v2.4H358.414Z"/>
+                    <path id="Path_2953" data-name="Path 2953" fill="currentColor" d="M378.747,94.14h5.414l4.164,16.78h-2.744L384.342,106h-5.777l-1.239,4.923h-2.719Zm.361,9.456h4.708l-1.737-7.178h-1.225Z"/>
+                    <path id="Path_2954" data-name="Path 2954" fill="currentColor" d="M397.1,105.947v4.973h-2.719V94.14h6.37c3.7,0,5.683,2.12,5.683,5.843,0,2.376-.956,4.519-2.744,5.352l2.769,5.585H403.47l-2.426-4.973Zm3.651-9.455H397.1v7.1h3.7c2.057,0,2.841-1.85,2.841-3.589,0-1.9-.934-3.511-2.894-3.511Z"/>
+                    <path id="Path_2955" data-name="Path 2955" fill="currentColor" d="M290.013,94.14h5.413l4.164,16.78h-2.743L295.608,106h-5.777l-1.239,4.923h-2.719Zm.361,9.456h4.707l-1.737-7.178h-1.225Z"/>
+                    <path id="Path_2956" data-name="Path 2956" fill="currentColor" d="M308.362,105.947v4.973h-2.719V94.14h6.369c3.7,0,5.683,2.12,5.683,5.843,0,2.376-.955,4.519-2.743,5.352l2.768,5.585h-2.989l-2.425-4.973Zm3.65-9.455h-3.65v7.1h3.7c2.058,0,2.841-1.85,2.841-3.589C314.9,98.1,313.972,96.492,312.012,96.492Z"/>
+                    <path id="Path_2957" data-name="Path 2957" fill="currentColor" d="M130.606,107.643a3.02,3.02,0,0,1-1.18,2.537,5.113,5.113,0,0,1-3.2.91,8.03,8.03,0,0,1-3.371-.564v-1.383a8.793,8.793,0,0,0,1.652.506,8.672,8.672,0,0,0,1.77.186,3.565,3.565,0,0,0,2.157-.544,1.783,1.783,0,0,0,.725-1.512,1.947,1.947,0,0,0-.257-1.05,2.393,2.393,0,0,0-.86-.754,12.171,12.171,0,0,0-1.833-.784,5.842,5.842,0,0,1-2.456-1.458,3.213,3.213,0,0,1-.738-2.2,2.736,2.736,0,0,1,1.071-2.267,4.444,4.444,0,0,1,2.831-.843,8.341,8.341,0,0,1,3.38.675l-.447,1.247a7.639,7.639,0,0,0-2.966-.641,2.878,2.878,0,0,0-1.779.489,1.612,1.612,0,0,0-.64,1.357,2.081,2.081,0,0,0,.236,1.049,2.231,2.231,0,0,0,.8.75,9.878,9.878,0,0,0,1.715.754,6.8,6.8,0,0,1,2.667,1.483,2.919,2.919,0,0,1,.723,2.057Z"/>
+                    <path id="Path_2958" data-name="Path 2958" fill="currentColor" d="M134.447,101.686v5.991a2.411,2.411,0,0,0,.515,1.686,2.09,2.09,0,0,0,1.609.556,2.629,2.629,0,0,0,2.12-.792,4,4,0,0,0,.67-2.587v-4.854h1.4v9.236H139.6l-.2-1.239h-.075a2.793,2.793,0,0,1-1.193,1.045,4,4,0,0,1-1.74.362,3.529,3.529,0,0,1-2.524-.8,3.409,3.409,0,0,1-.839-2.562v-6.042Z"/>
+                    <path id="Path_2959" data-name="Path 2959" fill="currentColor" d="M148.206,111.09a3.993,3.993,0,0,1-1.647-.333,3.1,3.1,0,0,1-1.252-1.023h-.1a12.265,12.265,0,0,1,.1,1.533v3.8h-1.4V101.686h1.137l.194,1.264h.067a3.257,3.257,0,0,1,1.256-1.1,3.831,3.831,0,0,1,1.643-.337,3.413,3.413,0,0,1,2.836,1.256,6.683,6.683,0,0,1-.017,7.057,3.42,3.42,0,0,1-2.817,1.264Zm-.2-8.385a2.482,2.482,0,0,0-2.048.784,4.041,4.041,0,0,0-.649,2.494v.312a4.625,4.625,0,0,0,.649,2.785,2.467,2.467,0,0,0,2.082.839,2.164,2.164,0,0,0,1.875-.969,4.6,4.6,0,0,0,.678-2.671,4.428,4.428,0,0,0-.678-2.651,2.232,2.232,0,0,0-1.915-.923Z"/>
+                    <path id="Path_2960" data-name="Path 2960" fill="currentColor" d="M159.039,111.09a3.993,3.993,0,0,1-1.647-.333,3.1,3.1,0,0,1-1.252-1.023h-.1a12.265,12.265,0,0,1,.1,1.533v3.8h-1.4V101.686h1.137l.194,1.264h.067a3.257,3.257,0,0,1,1.256-1.1,3.831,3.831,0,0,1,1.643-.337,3.413,3.413,0,0,1,2.836,1.256,6.683,6.683,0,0,1-.017,7.057,3.42,3.42,0,0,1-2.817,1.264Zm-.2-8.385a2.482,2.482,0,0,0-2.048.784,4.041,4.041,0,0,0-.649,2.494v.312a4.625,4.625,0,0,0,.649,2.785,2.467,2.467,0,0,0,2.082.839,2.164,2.164,0,0,0,1.875-.969,4.6,4.6,0,0,0,.678-2.671,4.428,4.428,0,0,0-.678-2.651,2.232,2.232,0,0,0-1.911-.923Z"/>
+                    <path id="Path_2961" data-name="Path 2961" fill="currentColor" d="M173.612,106.3a5.093,5.093,0,0,1-1.137,3.527,4.005,4.005,0,0,1-3.143,1.268,4.172,4.172,0,0,1-2.2-.581,3.84,3.84,0,0,1-1.483-1.669,5.8,5.8,0,0,1-.522-2.545,5.087,5.087,0,0,1,1.129-3.518,3.991,3.991,0,0,1,3.135-1.26,3.907,3.907,0,0,1,3.08,1.29,5.071,5.071,0,0,1,1.141,3.488Zm-7.036,0a4.384,4.384,0,0,0,.708,2.7,2.809,2.809,0,0,0,4.167,0,4.365,4.365,0,0,0,.712-2.7,4.293,4.293,0,0,0-.712-2.675,2.5,2.5,0,0,0-2.1-.915,2.461,2.461,0,0,0-2.072.9,4.334,4.334,0,0,0-.7,2.69Z"/>
+                    <path id="Path_2962" data-name="Path 2962" fill="currentColor" d="M180.525,101.517a5.506,5.506,0,0,1,1.1.1l-.194,1.3a4.786,4.786,0,0,0-1.011-.127,2.46,2.46,0,0,0-1.917.911,3.318,3.318,0,0,0-.8,2.267v4.955h-1.4v-9.236h1.154l.16,1.71h.068a4.054,4.054,0,0,1,1.238-1.39,2.787,2.787,0,0,1,1.6-.49Z"/>
+                    <path id="Path_2963" data-name="Path 2963" fill="currentColor" d="M187.363,109.936a4.506,4.506,0,0,0,.716-.055,4.387,4.387,0,0,0,.548-.114v1.07a2.5,2.5,0,0,1-.67.181,5,5,0,0,1-.8.072q-2.68,0-2.68-2.823v-5.494h-1.323V102.1l1.323-.582.59-1.972h.809v2.141h2.68v1.087h-2.68v5.435a1.869,1.869,0,0,0,.4,1.281A1.377,1.377,0,0,0,187.363,109.936Z"/>
+                    <path id="Path_2964" data-name="Path 2964" fill="currentColor" d="M194.538,111.09a4.239,4.239,0,0,1-3.231-1.247,4.824,4.824,0,0,1-1.184-3.463,5.355,5.355,0,0,1,1.1-3.548,3.652,3.652,0,0,1,2.954-1.315,3.484,3.484,0,0,1,2.747,1.142,4.378,4.378,0,0,1,1.011,3.013v.885h-6.362a3.66,3.66,0,0,0,.822,2.469,2.843,2.843,0,0,0,2.2.843,7.431,7.431,0,0,0,2.949-.624v1.247a7.377,7.377,0,0,1-1.4.459,7.863,7.863,0,0,1-1.6.139Zm-.379-8.4a2.286,2.286,0,0,0-1.774.725,3.337,3.337,0,0,0-.779,2.006h4.828a3.072,3.072,0,0,0-.59-2.027,2.076,2.076,0,0,0-1.685-.706Z"/>
+                    <path id="Path_2965" data-name="Path 2965" fill="currentColor" d="M206.951,109.683h-.076a3.287,3.287,0,0,1-2.9,1.407,3.427,3.427,0,0,1-2.819-1.239,5.452,5.452,0,0,1-1.006-3.522,5.542,5.542,0,0,1,1.011-3.548,3.4,3.4,0,0,1,2.814-1.264,3.361,3.361,0,0,1,2.883,1.365h.109l-.059-.665-.034-.649V97.809h1.4v13.113h-1.138Zm-2.8.236a2.551,2.551,0,0,0,2.078-.779,3.947,3.947,0,0,0,.644-2.516v-.3a4.638,4.638,0,0,0-.653-2.8,2.481,2.481,0,0,0-2.086-.839,2.14,2.14,0,0,0-1.883.957,4.76,4.76,0,0,0-.653,2.7,4.554,4.554,0,0,0,.649,2.671,2.194,2.194,0,0,0,1.906.906Z"/>
+                    <path id="Path_2966" data-name="Path 2966" fill="currentColor" d="M220.712,101.534a3.435,3.435,0,0,1,2.827,1.243,6.653,6.653,0,0,1-.009,7.053,3.417,3.417,0,0,1-2.818,1.26,4,4,0,0,1-1.648-.333,3.094,3.094,0,0,1-1.251-1.023h-.1l-.295,1.188h-1V97.809h1.4V101q0,1.069-.068,1.921h.068a3.322,3.322,0,0,1,2.894-1.387Zm-.2,1.171a2.44,2.44,0,0,0-2.064.822,6.338,6.338,0,0,0,.017,5.553,2.464,2.464,0,0,0,2.081.839,2.158,2.158,0,0,0,1.922-.94,4.828,4.828,0,0,0,.632-2.7,4.645,4.645,0,0,0-.632-2.689,2.242,2.242,0,0,0-1.959-.885Z"/>
+                    <path id="Path_2967" data-name="Path 2967" fill="currentColor" d="M225.758,101.686h1.5l2.023,5.267a20.188,20.188,0,0,1,.826,2.6h.067q.109-.431.459-1.471t2.288-6.4h1.5L230.452,112.2a5.253,5.253,0,0,1-1.378,2.212,2.932,2.932,0,0,1-1.934.653,5.659,5.659,0,0,1-1.264-.143V113.8a4.9,4.9,0,0,0,1.037.1,2.136,2.136,0,0,0,2.056-1.618l.514-1.314Z"/>
+                </g>
+            </g>
+        </svg>
+
+    </a>
+    <div class="tb"></div>
+    <div class="tb"><label for="docSel">文档</label><select id="docSel"></select></div>
+    <div class="tb mb-base">
+        <label for="base">Servers</label>
+        <select id="base" spellcheck="false"></select>
+    </div>
+    <div class="tb"><label for="token">Token</label><input id="token" type="text" spellcheck="false"
+                                                           placeholder="可留空"></div>
+    <div class="tb acts-right">
+        <button class="btn ghost mini" data-act="toggle-layout" id="layoutBtn" title="切换内容布局">全屏</button>
+        <button class="btn ghost mini" data-act="expand-all">全部展开</button>
+        <button class="btn ghost mini" data-act="collapse-all">全部收起</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand"><span id="ver">API 接口文档</span><small id="desc"></small></div>
+        <input id="q" type="text" placeholder="搜索接口 / 路径…" autocomplete="off">
+        <nav id="nav"></nav>
+    </aside>
+    <main class="main">
+        <div class="doc">
+            <div id="doc">
+                <div class="empty">加载中…</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    (function () {
+        'use strict';
+        /* ============ 常量 ============ */
+        // 同目录下的文档文件，按需增删，只写文件名即可
+        var DOCS = ['api.json', 'admin.json'];
+        var METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
+
+        /* 文件名 -> 请求路径：统一补 / ，保证从当前页面所在的同目录下取到 */
+        function docUrl(f) {
+            f = String(f == null ? '' : f).trim();
+            return f.charAt(0) === '/' ? f : '/' + f;
+        }
+
+        /* 文件名 -> 下拉展示名：去掉目录和 .json 后缀 */
+        function docName(f) {
+            return String(f == null ? '' : f).trim().split('/').pop().replace(/\.json$/i, '');
+        }
+
+        var LS_BASE = 'apidoc.base';
+        var LS_TOKEN = 'apidoc.token';
+        var SPEC = null;
+        var LIST = [];
+        var META = {};      // idx -> { path, method, hasBody, isGet }
+        var SPEC_URL = '';
+
+        /* ============ 工具 ============ */
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                return ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[c];
+            });
+        }
+
+        function resolveRef(ref) {
+            var parts = ref.replace(/^#\//, '').split('/');
+            var cur = SPEC;
+            for (var i = 0; i < parts.length; i++) {
+                if (!cur) return {};
+                cur = cur[parts[i]];
+            }
+            return cur || {};
+        }
+
+        // 展开 $ref / allOf
+        function deref(s, depth) {
+            depth = depth || 0;
+            if (!s || typeof s !== 'object' || depth > 12) return s || {};
+            if (s.$ref) return deref(resolveRef(s.$ref), depth + 1);
+            if (Array.isArray(s.allOf)) {
+                var merged = {properties: {}, required: []};
+                for (var k in s) if (k !== 'allOf') merged[k] = s[k];
+                s.allOf.forEach(function (sub) {
+                    var r = deref(sub, depth + 1);
+                    for (var k2 in r) {
+                        if (k2 === 'properties') {
+                            for (var p in r.properties) merged.properties[p] = r.properties[p];
+                        } else if (k2 === 'required') {
+                            if (Array.isArray(r.required)) merged.required = merged.required.concat(r.required);
+                        } else if (merged[k2] === undefined) {
+                            merged[k2] = r[k2];
+                        }
+                    }
+                });
+                return merged;
+            }
+            return s;
+        }
+
+        function typeLabel(s) {
+            s = deref(s);
+            if (!s || typeof s !== 'object') return '';
+            if (s.type === 'array') return 'array&lt;' + (typeLabel(s.items || {}) || 'any') + '&gt;';
+            if (Array.isArray(s.type)) return esc(s.type.join(' | '));
+            if (s.type) return esc(s.type);
+            if (s.properties) return 'object';
+            if (s.oneOf) return 'oneOf';
+            if (s.anyOf) return 'anyOf';
+            return '';
+        }
+
+        function refNameOf(s) {
+            return (s && typeof s === 'object' && typeof s.$ref === 'string')
+                ? s.$ref.split('/').pop() : '';
+        }
+
+        // 描述优先 description，其次 title（但 title 若只是类名则忽略），最后枚举值
+        function labelOf(p, refName) {
+            if (!p) return '';
+            var t = p.description || '';
+            if (!t) {
+                var ti = p.title || '';
+                if (ti && ti !== refName) t = ti;
+            }
+            if (!t && Array.isArray(p.enum) && p.enum.length) {
+                t = '枚举：' + p.enum.join(' / ');
+            }
+            return t;
+        }
+
+        // 兼容 hyperf 生成的两处怪癖：required 落在字段自身、字段名只有 title
+        function isRequired(name, p, objRequired) {
+            if (Array.isArray(objRequired) && objRequired.indexOf(name) > -1) return true;
+            if (p && Array.isArray(p.required) && p.required.indexOf(name) > -1) return true;
+            if (p && p.required === true) return true;
+            return false;
+        }
+
+        function exampleOf(s) {
+            s = deref(s);
+            if (!s) return '';
+            var v;
+            if (s.example !== undefined) v = s.example;
+            else if (s.default !== undefined) v = s.default;
+            else if (Array.isArray(s.enum) && s.enum.length) v = s.enum[0];
+            else return '';
+            if (v !== null && typeof v === 'object') {
+                try {
+                    v = JSON.stringify(v);
+                } catch (e) {
+                    v = String(v);
+                }
+            }
+            v = String(v);
+            if (v.length > 80) v = v.slice(0, 80) + '…';
+            return '<span class="code">' + esc(v) + '</span>';
+        }
+
+        function maxLenOf(s) {
+            s = deref(s);
+            var n = s.maxLength != null ? s.maxLength : (s.maxItems != null ? s.maxItems : null);
+            return n == null ? '' : esc(n);
+        }
+
+        // 生成请求体示例
+        function sample(s, depth) {
+            depth = depth || 0;
+            s = deref(s);
+            if (!s || depth > 6) return null;
+            if (s.example !== undefined) return s.example;
+            if (s.default !== undefined) return s.default;
+            if (Array.isArray(s.enum) && s.enum.length) return s.enum[0];
+            if (s.type === 'array') return [sample(s.items || {}, depth + 1)];
+            if (s.properties) {
+                var o = {};
+                Object.keys(s.properties).forEach(function (k) {
+                    o[k] = sample(s.properties[k], depth + 1);
+                });
+                return o;
+            }
+            if (s.type === 'integer' || s.type === 'number') return 0;
+            if (s.type === 'boolean') return false;
+            if (s.type === 'string') return '';
+            return null;
+        }
+
+        /* ============ 表格行 ============ */
+        var GID = 0;                 // 结构分组自增 id
+        var AUTO_FOLD_DEPTH = 1;     // 该深度起的嵌套结构默认收起（0 = 全部收起）
+        var DESC_LIMIT = 90;         // 描述超过该字符数则折叠为 2 行
+        // 描述单元格：过长时截断 + 展开/收起
+        function descCell(text) {
+            var t = text || '';
+            if (t.length <= DESC_LIMIT) return '<td>' + t + '</td>';
+            return '<td class="dcell"><div class="dtxt">' + t + '</div>' +
+                '<span class="dmore" data-act="toggle-desc">展开</span></td>';
+        }
+
+        function schemaRows(schema, mode, depth, out, parentRequired, ancestors, gids) {
+            ancestors = ancestors || [];
+            gids = gids || [];
+            var gattr = gids.length ? ' data-gids="' + gids.join(' ') + '"' : '';
+            var s = deref(schema);
+            var props = s.properties || {};
+            var req = Array.isArray(s.required) ? s.required : (parentRequired || []);
+            Object.keys(props).forEach(function (name) {
+                var raw = props[name];
+                var refName = refNameOf(raw);
+                var p = deref(raw);
+                var required = isRequired(name, p, req);
+                var cols = [];
+                cols.push('<td' + (depth ? ' style="padding-left:' + (10 + depth * 16) + 'px"' : '') + '>' + esc(name) + '</td>');
+                cols.push('<td>' + (typeLabel(p) || '<span class="muted">—</span>') + '</td>');
+                cols.push('<td>' + (required ? '是' : '否') + '</td>');
+                if (mode === 'request') cols.push('<td>' + (maxLenOf(p) || '') + '</td>');
+                cols.push(descCell(labelOf(p, refName) ? esc(labelOf(p, refName)) : ''));
+                cols.push('<td>' + (exampleOf(p) || '') + '</td>');
+                out.push('<tr' + gattr + '>' + cols.join('') + '</tr>');
+                if (depth >= 6) return;
+                // 找子结构（object / array of object / oneOf）
+                var child = null, childRef = '';
+                if (p.properties && Object.keys(p.properties).length) {
+                    child = p;
+                    childRef = refName;
+                } else if (p.type === 'array') {
+                    var rawItems = raw && raw.items;
+                    childRef = refNameOf(rawItems);
+                    var it = deref(rawItems || {});
+                    if (it.properties && Object.keys(it.properties).length) child = it;
+                } else if (p.oneOf && p.oneOf.length) {
+                    childRef = refNameOf(raw && raw.oneOf && raw.oneOf[0]);
+                    var first = deref(p.oneOf[0]);
+                    if (first.properties) child = first;
+                }
+                // 循环引用保护：同一 schema 已展开过则不再递归
+                if (!child || (childRef && ancestors.indexOf(childRef) > -1)) return;
+                // 每个嵌套结构生成一个可折叠的分组行
+                var gid = 'g' + (++GID);
+                var n = Object.keys(child.properties || {}).length;
+                out.push('<tr class="grp' + (depth >= AUTO_FOLD_DEPTH ? ' folded' : '') + '"' +
+                    ' data-act="toggle-grp" data-gid="' + gid + '"' + gattr + '>' +
+                    '<td colspan="' + (mode === 'request' ? 6 : 5) + '" style="padding-left:' + (10 + depth * 16) + 'px">' +
+                    '<span class="grp-l"><i class="caret"></i><span class="gname">' + esc(name) +
+                    ' 参数结构</span><span class="cnt">' + n + ' 项</span></span></td></tr>');
+                schemaRows(child, mode, depth + 1, out, child.required || [],
+                    childRef ? ancestors.concat([childRef]) : ancestors,
+                    gids.concat([gid]));
+            });
+        }
+
+        /* ============ 结构折叠（参数表内嵌套结构） ============ */
+
+        // 表格标题右侧的「收起全部 / 展开全部」按钮（仅当表内存在可折叠结构时出现）
+        function foldAllBtn(rows) {
+            var has = rows.some(function (r) {
+                return r.indexOf('data-act="toggle-grp"') > -1;
+            });
+            return has ? '<span class="fold-all" data-act="fold-table">收起全部</span>' : '';
+        }
+
+        // 按各分组行的 folded 状态重算行显隐，天然支持多层嵌套
+        function recalcFold(tbl) {
+            var folded = {};
+            Array.prototype.forEach.call(tbl.querySelectorAll('tr.grp[data-gid]'), function (t) {
+                if (t.classList.contains('folded')) folded[t.dataset.gid] = 1;
+            });
+            Array.prototype.forEach.call(tbl.querySelectorAll('tr[data-gids]'), function (r) {
+                var gs = (r.getAttribute('data-gids') || '').split(' ');
+                var hide = false;
+                for (var i = 0; i < gs.length; i++) {
+                    if (folded[gs[i]]) {
+                        hide = true;
+                        break;
+                    }
+                }
+                r.style.display = hide ? 'none' : '';
+            });
+        }
+
+        function syncFoldBtn(tbl) {
+            var btn = tbl.querySelector('.fold-all');
+            if (!btn) return;
+            var any = Array.prototype.some.call(tbl.querySelectorAll('tr.grp[data-gid]'), function (t) {
+                return t.classList.contains('folded');
+            });
+            btn.textContent = any ? '展开全部' : '收起全部';
+        }
+
+        function setFoldAll(tbl, collapsed) {
+            Array.prototype.forEach.call(tbl.querySelectorAll('tr.grp[data-gid]'), function (t) {
+                t.classList.toggle('folded', collapsed);
+            });
+            recalcFold(tbl);
+            syncFoldBtn(tbl);
+        }
+
+        // 首屏折叠状态：优先读用户上次偏好，否则按 AUTO_FOLD_DEPTH
+        function applyFoldDefault() {
+            var tables = document.querySelectorAll('table.tbl');
+            var pref = localStorage.getItem('apidoc.fold|' + SPEC_URL);
+            if (pref === '1' || pref === '0') {
+                Array.prototype.forEach.call(tables, function (tbl) {
+                    if (tbl.querySelector('tr.grp[data-gid]')) setFoldAll(tbl, pref === '0');
+                });
+                return;
+            }
+            Array.prototype.forEach.call(tables, function (tbl) {
+                recalcFold(tbl);
+                syncFoldBtn(tbl);
+            });
+        }
+
+        /* ============ 调试区 ============ */
+        function collectParams(op) {
+            var list = (op.parameters || []).map(function (p) {
+                return deref(p);
+            });
+            var path = [], query = [];
+            list.forEach(function (p) {
+                if (!p || !p.name) return;
+                if (p.in === 'path') path.push(p);
+                else if (p.in === 'query') query.push(p);
+            });
+            return {path: path, query: query, all: list};
+        }
+
+        function pathTemplateVars(path) {
+            var out = [], re = /\{([^}]+)\}/g, m;
+            while ((m = re.exec(path)) !== null) out.push(m[1]);
+            return out;
+        }
+
+        function tryBlock(idx, path, method, params, bodySchema, contentType, hasBody) {
+            var vars = pathTemplateVars(path);
+            params.path.forEach(function (p) {
+                if (vars.indexOf(p.name) < 0) vars.push(p.name);
+            });
+            var h = [];
+            h.push('<div class="try collapsed" data-idx="' + idx + '">');
+            h.push('<div class="try-h" data-act="toggle-try" data-idx="' + idx + '">' +
+                '<span class="tl"><i class="caret"></i><span>在线调试</span>' +
+                '<span class="badge auth" data-authbadge="' + idx + '"' + (needToken(idx) ? '' : ' style="display:none"') +
+                '>携带 Token</span></span>' +
+                '<span class="hint">' + (hasBody ? 'JSON 请求体' : '无请求体') + '</span></div>');
+            h.push('<div class="try-b">');
+            h.push('<div class="warn-tip" data-warn="' + idx + '">该接口标记为「需 Token」，发送时会自动带上顶部 Token；当前 Token 为空，可能返回 401。</div>');
+            h.push('<div class="row"><label>请求地址</label><div class="ctl">' +
+                '<input type="text" class="f-url" spellcheck="false" value="' + esc(path) + '">' +
+                '<div class="tip">完整 URL = Base + 上面的路径，可直接修改</div></div></div>');
+            vars.forEach(function (name) {
+                h.push('<div class="row"><label>路径参数</label><div class="ctl">' +
+                    '<input type="text" data-p="path" data-name="' + esc(name) + '" placeholder="' + esc(name) + '">' +
+                    '<div class="tip">' + esc(name) + '<span class="req">*</span></div></div></div>');
+            });
+            params.query.forEach(function (p) {
+                h.push('<div class="row"><label>Query</label><div class="ctl">' +
+                    '<input type="text" data-p="query" data-name="' + esc(p.name) + '" placeholder="' +
+                    esc(labelOf(p) || p.name) + '">' +
+                    '<div class="tip">' + esc(p.name) + (p.required ? '<span class="req">*</span>' : '') +
+                    (labelOf(p) ? ' · ' + esc(labelOf(p)) : '') + '</div></div></div>');
+            });
+            var hdr = {'Content-Type': contentType || 'application/json'};
+            h.push('<div class="row"><label>请求头</label><div class="ctl">' +
+                '<textarea class="f-headers" spellcheck="false">' + esc(JSON.stringify(hdr, null, 2)) + '</textarea>' +
+                '<div class="tip">JSON 格式；填入上方 Token 后会自动追加 Authorization</div></div></div>');
+            if (hasBody) {
+                var bodyText = bodySchema ? JSON.stringify(sample(bodySchema), null, 2) : '{}';
+                h.push('<div class="row"><label>请求体</label><div class="ctl">' +
+                    '<textarea class="f-body" spellcheck="false">' + esc(bodyText) + '</textarea></div></div>');
+            }
+            h.push('<div class="acts">' +
+                '<button class="btn" data-act="send" data-idx="' + idx + '">发送请求</button>' +
+                '<button class="btn ghost" data-act="fill" data-idx="' + idx + '">填充示例</button>' +
+                '</div>');
+            h.push('<div class="resp"><div class="resp-meta"></div><pre class="resp-body"></pre></div>');
+            h.push('</div></div>');
+            return h.join('');
+        }
+
+        /* ============ 渲染接口 ============ */
+        function renderApi(item, index) {
+            var path = item.path, method = item.method, op = item.op;
+            var params = collectParams(op);
+            META[index] = {path: path, method: method, op: op, hasBody: false};
+            var needAuth = needToken(index);
+            var html = [];
+            html.push('<section class="api" id="api-' + index + '">');
+            html.push('<h2 class="api-title" data-act="toggle-api" data-idx="' + index + '">' +
+                '<i class="caret"></i>' +
+                '<span class="m ' + method + '">' + method.toUpperCase() + '</span>' +
+                '<span class="api-name">' + esc(op.summary || path) + '</span>' +
+                '<span class="path">' + esc(path) + '</span>' +
+                '<span class="api-right">' +
+                '<span class="badge auth"' + (needAuth ? '' : ' style="display:none"') + '>需 Token</span>' +
+                '<label class="auth-tog" title="该接口调用时是否注入 Authorization">' +
+                '<input type="checkbox" data-act="auth" data-idx="' + index + '"' + (needAuth ? ' checked' : '') + '>' +
+                '需 Token</label>' +
+                '</span></h2>');
+            html.push('<div class="api-body">');
+            if (op.description) html.push('<p class="desc">' + esc(op.description) + '</p>');
+            /* 公共参数 */
+            var contentType = 'application/json';
+            var bodySchema = null;
+            var rb = null;
+            if (op.requestBody) {
+                rb = deref(op.requestBody);
+                var content = rb.content || {};
+                var ct = Object.keys(content)[0];
+                if (ct) {
+                    contentType = ct;
+                    bodySchema = deref(content[ct].schema || {});
+                }
+            }
+            var headerParams = params.all.filter(function (p) {
+                return p.in === 'header';
+            });
+            var auth = Array.isArray(op.security) && op.security.length ? 'Bearer {token}' : '';
+            html.push('<table class="tbl"><colgroup><col style="width:150px"><col></colgroup>');
+            html.push('<tr class="thead"><td colspan="2">公共参数</td></tr>');
+            html.push('<tr><td class="lb">请求地址</td><td class="code">' + esc(path) + '</td></tr>');
+            html.push('<tr><td class="lb">请求类型</td><td>' + esc(method) + '</td></tr>');
+            html.push('<tr class="thead"><td colspan="2">请求头信息</td></tr>');
+            html.push('<tr class="th"><td class="lb">参数</td><td>值</td></tr>');
+            html.push('<tr><td>Content-Type</td><td class="code">' + esc(contentType) + '</td></tr>');
+            headerParams.forEach(function (p) {
+                var v = exampleOf(p) || (p.schema ? exampleOf(p.schema) : '') || esc(labelOf(p));
+                html.push('<tr><td>' + esc(p.name) + '</td><td class="code">' + v + '</td></tr>');
+            });
+            if (auth) html.push('<tr><td>Authorization</td><td class="code">' + esc(auth) + '</td></tr>');
+            html.push('</table>');
+            /* 请求参数 */
+            var reqRows = [];
+            params.all.filter(function (p) {
+                return p.in !== 'header';
+            }).forEach(function (p) {
+                var sch = deref(p.schema || {});
+                var required = p.required === true || p.in === 'path';
+                reqRows.push('<tr>' +
+                    '<td>' + esc(p.name) + '</td>' +
+                    '<td>' + (typeLabel(sch) || '<span class="muted">—</span>') + '</td>' +
+                    '<td>' + (required ? '是' : '否') + '</td>' +
+                    '<td>' + (maxLenOf(sch) || '') + '</td>' +
+                    descCell(esc(labelOf(p) || (p.in === 'path' ? '路径参数' : '查询参数'))) +
+                    '<td>' + (exampleOf(sch) || '') + '</td>' +
+                    '</tr>');
+            });
+            var hasBody = false;
+            if (bodySchema && Object.keys(bodySchema.properties || {}).length) {
+                hasBody = true;
+                schemaRows(bodySchema, 'request', 0, reqRows, bodySchema.required || []);
+            } else if (bodySchema && bodySchema.type === 'array') {
+                hasBody = true;
+                var it0 = deref(bodySchema.items || {});
+                reqRows.push('<tr><td>body<span class="muted">（数组）</span></td><td>' +
+                    (typeLabel(bodySchema) || 'array') + '</td><td>' + (rb && rb.required ? '是' : '否') +
+                    '</td><td></td><td>请求体（JSON 数组）</td><td></td></tr>');
+                if (it0.properties) {
+                    var ga = 'g' + (++GID);
+                    reqRows.push('<tr class="grp folded" data-act="toggle-grp" data-gid="' + ga + '">' +
+                        '<td colspan="6"><span class="grp-l"><i class="caret"></i><span class="gname">数组元素结构</span>' +
+                        '<span class="cnt">' + Object.keys(it0.properties).length + ' 项</span></span></td></tr>');
+                    schemaRows(it0, 'request', 1, reqRows, it0.required || [], [], [ga]);
+                }
+            } else if (op.requestBody) {
+                hasBody = true;
+            }
+            if (reqRows.length) {
+                html.push('<table class="tbl"><colgroup>' +
+                    '<col style="width:17%"><col style="width:13%"><col style="width:9%"><col style="width:9%">' +
+                    '<col style="width:31%"><col style="width:21%"></colgroup>');
+                html.push('<tr class="thead"><td colspan="6">请求参数' +
+                    foldAllBtn(reqRows) + '</td></tr>');
+                html.push('<tr class="th"><td>参数</td><td>类型</td><td>是否必填</td><td>最大长度</td><td>描述</td><td>示例值</td></tr>');
+                html.push(reqRows.join(''));
+                html.push('</table>');
+            }
+            /* 响应结构 */
+            var responses = op.responses || {};
+            var codes = Object.keys(responses);
+            if (codes.length) {
+                var okCodes = codes.filter(function (c) {
+                    return /^2/.test(c);
+                });
+                var ordered = okCodes.concat(codes.filter(function (c) {
+                    return okCodes.indexOf(c) < 0;
+                }));
+                var multi = ordered.length > 1;
+                var respRows = [];
+                ordered.forEach(function (code) {
+                    var r = deref(responses[code] || {});
+                    var content = r.content || {};
+                    var ct = Object.keys(content)[0];
+                    var sch = ct ? deref(content[ct].schema || {}) : null;
+                    if (multi) {
+                        respRows.push('<tr class="grp"><td colspan="5">HTTP ' + esc(code) +
+                            (r.description ? '<span class="note">' + esc(r.description) + '</span>' : '') + '</td></tr>');
+                    }
+                    if (sch && sch.type === 'array') {
+                        var it1 = deref(sch.items || {});
+                        respRows.push('<tr><td>data<span class="muted">（数组）</span></td><td>' + (typeLabel(sch) || 'array') +
+                            '</td><td>—</td><td>' + esc(labelOf(sch)) + '</td><td></td></tr>');
+                        if (it1.properties) {
+                            var gb = 'g' + (++GID);
+                            respRows.push('<tr class="grp folded" data-act="toggle-grp" data-gid="' + gb + '">' +
+                                '<td colspan="5"><span class="grp-l"><i class="caret"></i><span class="gname">数组元素结构</span>' +
+                                '<span class="cnt">' + Object.keys(it1.properties).length + ' 项</span></span></td></tr>');
+                            schemaRows(it1, 'response', 1, respRows, it1.required || [], [], [gb]);
+                        }
+                    } else if (sch && Object.keys(sch.properties || {}).length) {
+                        schemaRows(sch, 'response', 0, respRows, sch.required || []);
+                    } else if (r.description) {
+                        respRows.push('<tr><td colspan="5">' + esc(r.description) + '</td></tr>');
+                    }
+                });
+                var firstDesc = '';
+                if (!multi) {
+                    var r0 = deref(responses[ordered[0]] || {});
+                    firstDesc = ordered[0] + (r0.description ? ' · ' + r0.description : '');
+                }
+                html.push('<table class="tbl"><colgroup>' +
+                    '<col style="width:19%"><col style="width:13%"><col style="width:9%"><col style="width:34%"><col style="width:25%"></colgroup>');
+                html.push('<tr class="thead"><td colspan="5">响应结构' +
+                    (firstDesc ? '<span class="note">' + esc(firstDesc) + '</span>' : '') +
+                    foldAllBtn(respRows) + '</td></tr>');
+                html.push('<tr class="th"><td>参数</td><td>类型</td><td>是否必须</td><td>描述</td><td>示例值</td></tr>');
+                html.push(respRows.join(''));
+                html.push('</table>');
+            }
+            /* 在线调试 */
+            html.push(tryBlock(index, path, method, params, bodySchema, contentType, hasBody));
+            html.push('</div></section>');
+            META[index].hasBody = hasBody;
+            return html.join('');
+        }
+
+        /* ============ 构建 ============ */
+        function build() {
+            var doc = document.getElementById('doc');
+            var nav = document.getElementById('nav');
+            LIST = [];
+            META = {};
+            var paths = SPEC.paths || {};
+            Object.keys(paths).forEach(function (path) {
+                var item = paths[path];
+                METHODS.forEach(function (m) {
+                    if (item && item[m]) {
+                        LIST.push({
+                            path: path, method: m, op: item[m],
+                            tag: (item[m].tags && item[m].tags[0]) || '默认分组'
+                        });
+                    }
+                });
+            });
+            if (!LIST.length) {
+                doc.innerHTML = '<div class="empty">未发现任何接口（' + esc(SPEC_URL) + '）。</div>';
+                return;
+            }
+            var groups = [], map = {};
+            LIST.forEach(function (it) {
+                if (!map[it.tag]) {
+                    map[it.tag] = [];
+                    groups.push(it.tag);
+                }
+                map[it.tag].push(it);
+            });
+            var navHtml = [], docHtml = [], idx = 0;
+            groups.forEach(function (tag) {
+                var items = map[tag];
+                var body = [];
+                navHtml.push('<div class="tag" data-act="toggle-tag" data-tag="' + esc(tag) + '">' +
+                    '<i class="caret"></i><span class="t">' + esc(tag) + '</span>' +
+                    '<span class="g-count">' + items.length + '</span></div>');
+                items.forEach(function (it) {
+                    navHtml.push('<a href="#api-' + idx + '" data-idx="' + idx + '" data-tag="' + esc(tag) + '">' +
+                        '<i class="dot ' + it.method + '"></i><span class="t">' + esc(it.op.summary || it.path) + '</span></a>');
+                    body.push(renderApi(it, idx));
+                    idx++;
+                });
+                docHtml.push('<div class="group" data-tag="' + esc(tag) + '">' +
+                    '<div class="group-h" data-act="toggle-tag" data-tag="' + esc(tag) + '">' +
+                    '<i class="caret"></i><span class="g-name">' + esc(tag) + '</span>' +
+                    '<span class="g-count">' + items.length + '</span></div>' +
+                    '<div class="group-b">' + body.join('') + '</div></div>');
+            });
+            nav.innerHTML = navHtml.join('');
+            doc.innerHTML = docHtml.join('');
+            document.getElementById('ver').textContent =
+                (SPEC.info && SPEC.info.title ? SPEC.info.title + ' · ' : '') +
+                (SPEC.info && SPEC.info.version ? 'v' + SPEC.info.version : '');
+            document.getElementById('desc').textContent = (SPEC.info && SPEC.info.description) || '';
+            applyDefaults();
+            syncLayoutBtn();
+            restoreUI();
+            bindNav();
+            var hash = location.hash;
+            if (hash && /^#api-\d+$/.test(hash)) {
+                revealApi(parseInt(hash.slice(5), 10));
+                var el = document.getElementById(hash.slice(1));
+                if (el) window.scrollTo(0, Math.max(0, el.offsetTop - 70));
+            }
+        }
+
+        /* ============ 折叠状态 ============ */
+        function uiKey(kind, id) {
+            return 'apidoc.ui|' + SPEC_URL + '|' + kind + '|' + id;
+        }
+
+        function apiKeyOf(idx) {
+            var m = META[idx];
+            return m ? (m.method + ' ' + m.path) : '';
+        }
+
+        // 接口是否需要 Token：手动设置优先 > op.security > 全局 security > 按文档默认
+        // 这里也是文件名，和 DOCS 保持一致
+        var DEFAULT_AUTH_DOCS = ['admin.json'];
+
+        function defaultToken(idx) {
+            var m = META[idx];
+            if (!m) return false;
+            var op = m.op || {};
+            if (Array.isArray(op.security)) return op.security.length > 0;
+            if (Array.isArray(SPEC.security)) return SPEC.security.length > 0;
+            return DEFAULT_AUTH_DOCS.some(function (f) {
+                return docUrl(f) === SPEC_URL;
+            });
+        }
+
+        function needToken(idx) {
+            var v = localStorage.getItem('apidoc.auth|' + SPEC_URL + '|' + apiKeyOf(idx));
+            if (v === '1') return true;
+            if (v === '0') return false;
+            return defaultToken(idx);
+        }
+
+        function findGroup(tag) {
+            var list = document.querySelectorAll('.group');
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].dataset.tag === tag) return list[i];
+            }
+            return null;
+        }
+
+        function findNavTag(tag) {
+            var list = document.querySelectorAll('#nav .tag');
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].dataset.tag === tag) return list[i];
+            }
+            return null;
+        }
+
+        function syncNavTag(tag, collapsed) {
+            var el = findNavTag(tag);
+            if (!el) return;
+            el.classList.toggle('collapsed', collapsed);
+            var n = el.nextElementSibling;
+            while (n && !n.classList.contains('tag')) {
+                if (!n.dataset.navHidden) n.style.display = collapsed ? 'none' : '';
+                n = n.nextElementSibling;
+            }
+        }
+
+        function setGroup(tag, collapsed, persist) {
+            var g = findGroup(tag);
+            if (g) g.classList.toggle('collapsed', collapsed);
+            syncNavTag(tag, collapsed);
+            if (persist) localStorage.setItem(uiKey('g', tag), collapsed ? '0' : '1');
+        }
+
+        function setApi(idx, collapsed, persist) {
+            var sec = document.getElementById('api-' + idx);
+            if (sec) sec.classList.toggle('collapsed', collapsed);
+            if (persist) localStorage.setItem(uiKey('a', apiKeyOf(idx)), collapsed ? '0' : '1');
+        }
+
+        function revealApi(idx) {
+            var sec = document.getElementById('api-' + idx);
+            if (!sec) return;
+            sec.style.display = '';
+            setApi(idx, false, false);
+            var g = sec.closest('.group');
+            if (g) {
+                g.style.display = '';
+                setGroup(g.dataset.tag, false, false);
+            }
+        }
+
+        function resetUI() {
+            Array.prototype.forEach.call(document.querySelectorAll('.group'), function (g) {
+                g.classList.remove('collapsed');
+                g.style.display = '';
+            });
+            Array.prototype.forEach.call(document.querySelectorAll('.api'), function (s) {
+                s.classList.remove('collapsed');
+                s.style.display = '';
+            });
+            Array.prototype.forEach.call(document.querySelectorAll('#nav .tag'), function (t) {
+                t.classList.remove('collapsed');
+                t.style.display = '';
+            });
+            Array.prototype.forEach.call(document.querySelectorAll('#nav a'), function (a) {
+                a.style.display = '';
+            });
+        }
+
+        function restoreUI() {
+            Array.prototype.forEach.call(document.querySelectorAll('.group'), function (g) {
+                if (localStorage.getItem(uiKey('g', g.dataset.tag)) === '0') {
+                    g.classList.add('collapsed');
+                    syncNavTag(g.dataset.tag, true);
+                }
+            });
+            Object.keys(META).forEach(function (i) {
+                if (localStorage.getItem(uiKey('a', apiKeyOf(i))) === '0') {
+                    var sec = document.getElementById('api-' + i);
+                    if (sec) sec.classList.add('collapsed');
+                }
+            });
+            applyFoldDefault();
+        }
+
+        function syncLayoutBtn() {
+            var b = document.getElementById('layoutBtn');
+            if (!b) return;
+            var full = document.documentElement.classList.contains('full');
+            b.textContent = full ? '居中' : '全屏';
+            b.title = full ? '恢复居中布局（内容最大 1200px）' : '内容铺满窗口宽度';
+        }
+
+        function syncAuthBadges(idx, need) {
+            var sec = document.getElementById('api-' + idx);
+            if (sec) {
+                var badge = sec.querySelector('.api-right .badge.auth');
+                if (badge) badge.style.display = need ? 'inline-block' : 'none';
+            }
+            var box = document.querySelector('.try[data-idx="' + idx + '"]');
+            if (box) {
+                var b2 = box.querySelector('[data-authbadge]');
+                if (b2) b2.style.display = need ? 'inline-block' : 'none';
+            }
+        }
+
+        // Base 按文档分别记忆：同一份 spec 里有多个 server 时可直接从下拉选
+        function baseKey() {
+            return 'apidoc.base|' + SPEC_URL;
+        }
+
+        function specServers() {
+            var arr = (SPEC && Array.isArray(SPEC.servers)) ? SPEC.servers : [];
+            return arr.filter(function (s) {
+                return s && s.url;
+            });
+        }
+
+        // 实际使用的服务地址（只取下拉选中值）
+        function baseValue() {
+            var v = document.getElementById('base').value;
+            return (v || '').trim().replace(/\/+$/, '');
+        }
+
+        function fillBaseSelect() {
+            var sel = document.getElementById('base');
+            var sv = specServers();
+            var saved = localStorage.getItem(baseKey()) || '';
+            var legacy = localStorage.getItem(LS_BASE) || '';
+            var opts = [], seen = {};
+            sv.forEach(function (s) {
+                if (seen[s.url]) return;
+                seen[s.url] = 1;
+                opts.push({v: s.url, t: s.url + (s.description ? ' - ' + s.description : '')});
+            });
+            if (!opts.length) {
+                opts.push({v: 'http://127.0.0.1:9501', t: 'http://127.0.0.1:9501'});
+                seen['http://127.0.0.1:9501'] = 1;
+            }
+            // 记忆的地址若已不在 servers 列表，退回第一个，不再走自定义输入
+            var cur = seen[saved] ? saved : (seen[legacy] ? legacy : opts[0].v);
+            sel.innerHTML = opts.map(function (o) {
+                return '<option value="' + esc(o.v) + '">' + esc(o.t) + '</option>';
+            }).join('');
+            sel.value = cur;
+            sel.title = '本文档共 ' + opts.length + ' 个服务地址' +
+                (opts.length > 1 ? '，可切换' : '');
+        }
+
+        function applyDefaults() {
+            fillBaseSelect();
+            var tokenEl = document.getElementById('token');
+            tokenEl.value = localStorage.getItem(LS_TOKEN) || '';
+            // 每个接口的 URL 前面补 Base 展示
+            Object.keys(META).forEach(function (i) {
+                var box = document.querySelector('.try[data-idx="' + i + '"]');
+                if (!box) return;
+                var inp = box.querySelector('.f-url');
+                if (inp && inp.value === META[i].path) {
+                    inp.dataset.auto = '1';
+                }
+            });
+        }
+
+        function bindNav() {
+            var links = Array.prototype.slice.call(document.querySelectorAll('#nav a'));
+            links.forEach(function (a) {
+                a.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var ai = Number(a.dataset.idx);
+                    revealApi(ai);
+                    var el = document.getElementById('api-' + ai);
+                    if (el) {
+                        window.scrollTo({
+                            top: el.getBoundingClientRect().top + window.scrollY - 56,
+                            behavior: 'smooth'
+                        });
+                        history.replaceState(null, '', a.getAttribute('href'));
+                    }
+                });
+            });
+            var ticking = false;
+            window.addEventListener('scroll', function () {
+                if (ticking) return;
+                ticking = true;
+                requestAnimationFrame(function () {
+                    ticking = false;
+                    var pos = window.scrollY + 80, cur = null;
+                    links.forEach(function (a) {
+                        var el = document.getElementById('api-' + a.dataset.idx);
+                        if (el && el.offsetTop <= pos) cur = a;
+                    });
+                    links.forEach(function (a) {
+                        a.classList.toggle('active', a === cur);
+                    });
+                });
+            });
+            var q = document.getElementById('q');
+            q.addEventListener('input', function () {
+                var kw = q.value.trim().toLowerCase();
+                if (kw === '') {
+                    resetUI();
+                    restoreUI();
+                    return;
+                }
+                // 搜索时先全部展开
+                Array.prototype.forEach.call(document.querySelectorAll('.group'), function (g) {
+                    g.classList.remove('collapsed');
+                    g.style.display = '';
+                    syncNavTag(g.dataset.tag, false);
+                });
+                Array.prototype.forEach.call(document.querySelectorAll('.api'), function (s) {
+                    s.classList.remove('collapsed');
+                });
+                links.forEach(function (a) {
+                    var it = LIST[a.dataset.idx];
+                    var hay = (it.path + ' ' + (it.op.summary || '') + ' ' + it.method + ' ' + it.tag).toLowerCase();
+                    var hit = hay.indexOf(kw) > -1;
+                    a.style.display = hit ? '' : 'none';
+                    var sec = document.getElementById('api-' + a.dataset.idx);
+                    if (sec) sec.style.display = hit ? '' : 'none';
+                });
+                // 无命中项的分组整体隐藏
+                Array.prototype.forEach.call(document.querySelectorAll('.group'), function (g) {
+                    var any = false;
+                    Array.prototype.forEach.call(g.querySelectorAll('.api'), function (s) {
+                        if (s.style.display !== 'none') any = true;
+                    });
+                    g.style.display = any ? '' : 'none';
+                });
+                Array.prototype.forEach.call(document.querySelectorAll('#nav .tag'), function (t) {
+                    var any = false, n = t.nextElementSibling;
+                    while (n && !n.classList.contains('tag')) {
+                        if (n.style.display !== 'none') {
+                            any = true;
+                            break;
+                        }
+                        n = n.nextElementSibling;
+                    }
+                    t.style.display = any ? '' : 'none';
+                });
+            });
+        }
+
+        /* ============ 发送请求 ============ */
+        function box(idx) {
+            return document.querySelector('.try[data-idx="' + idx + '"]');
+        }
+
+        function fullUrl(b) {
+            var base = baseValue();
+            var p = b.querySelector('.f-url').value.trim();
+            if (/^https?:\/\//i.test(p)) return p;
+            if (!p.startsWith('/')) p = '/' + p;
+            return base + p;
+        }
+
+        function setResp(b, cls, statusText, ms, bodyHtml) {
+            var resp = b.querySelector('.resp');
+            resp.style.display = 'block';
+            resp.querySelector('.resp-meta').innerHTML =
+                '<span class="st ' + cls + '">' + esc(statusText) + '</span>' +
+                '<span>' + ms + ' ms</span>' +
+                '<button class="btn ghost mini" data-act="copy">复制</button>';
+            resp.querySelector('.resp-body').innerHTML = bodyHtml;
+        }
+
+        function send(btn) {
+            var idx = btn.dataset.idx;
+            var b = box(idx);
+            if (!b) return;
+            var meta = META[idx];
+            var url = fullUrl(b);
+            // 路径参数
+            Array.prototype.forEach.call(b.querySelectorAll('[data-p="path"]'), function (inp) {
+                var v = inp.value.trim();
+                if (v !== '') url = url.replace('{' + inp.dataset.name + '}', encodeURIComponent(v));
+            });
+            // Query
+            var qs = [];
+            Array.prototype.forEach.call(b.querySelectorAll('[data-p="query"]'), function (inp) {
+                if (inp.value.trim() === '') return;
+                qs.push(encodeURIComponent(inp.dataset.name) + '=' + encodeURIComponent(inp.value.trim()));
+            });
+            if (qs.length) url += (url.indexOf('?') > -1 ? '&' : '?') + qs.join('&');
+            // 请求头
+            var headers = {};
+            try {
+                headers = JSON.parse(b.querySelector('.f-headers').value || '{}');
+            } catch (e) {
+                setResp(b, 'err', '请求头无效', 0, '请填写合法的 JSON，例如：\n{\n  "Content-Type": "application/json"\n}');
+                return;
+            }
+            var token = document.getElementById('token').value.trim();
+            var hasAuth = Object.keys(headers).some(function (k) {
+                return k.toLowerCase() === 'authorization';
+            });
+            // 只有被标记为「需 Token」的接口才注入 Authorization
+            if (needToken(idx) && token && !hasAuth) {
+                headers.Authorization = /^bearer\s/i.test(token) ? token : 'Bearer ' + token;
+            }
+            updateTokenHint(idx);
+            var opt = {method: meta.method.toUpperCase(), headers: headers, mode: 'cors'};
+            var ta = b.querySelector('.f-body');
+            if (ta && ta.value.trim() !== '' && ['GET', 'HEAD'].indexOf(opt.method) < 0) {
+                opt.body = ta.value;
+            }
+            btn.disabled = true;
+            var old = btn.textContent;
+            btn.textContent = '发送中…';
+            var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+            fetch(url, opt).then(function (res) {
+                return res.text().then(function (text) {
+                    var ms = Math.round(((window.performance && performance.now) ? performance.now() : Date.now()) - t0);
+                    var pretty = text;
+                    try {
+                        pretty = JSON.stringify(JSON.parse(text), null, 2);
+                    } catch (e) { /* 非 JSON 原样输出 */
+                    }
+                    var cls = res.status >= 500 ? 'err' : res.status >= 400 ? 'warn' : res.status >= 300 ? 'redir' : 'ok';
+                    var ct = res.headers.get('content-type') || '';
+                    setResp(b, cls, res.status + ' ' + (res.statusText || ''), ms,
+                        '<span style="color:#98a2b3">' + esc(ct) + '\n</span>' + esc(pretty.slice(0, 200000)));
+                });
+            }).catch(function (err) {
+                var ms = Math.round(((window.performance && performance.now) ? performance.now() : Date.now()) - t0);
+                setResp(b, 'err', '请求失败', ms,
+                    '<div class="err-tip">' + esc(err && err.message ? err.message : String(err)) +
+                    // '<br>' +
+                    // '可能原因：<br>' +
+                    // '1. 业务端口未允许跨域 —— 文档页与接口不同源，需服务端返回 <code>Access-Control-Allow-Origin</code> 并放行 <code>OPTIONS</code> 预检；<br>' +
+                    // '2. 服务未启动或地址不可达（当前请求：' + esc(url) + '）；<br>' +
+                    // '3. HTTPS 页面调用 HTTP 接口被浏览器拦截。
+                    '</div>');
+            }).then(function () {
+                btn.disabled = false;
+                btn.textContent = old;
+            });
+        }
+
+        /* ============ 事件委托 ============ */
+        document.addEventListener('click', function (e) {
+            // 「需 Token」复选框不触发折叠
+            if (e.target.closest('.auth-tog')) return;
+            var el = e.target.closest('[data-act]');
+            if (!el) return;
+            var act = el.dataset.act;
+            if (act === 'toggle-api') {
+                var ai = Number(el.dataset.idx);
+                var secEl = document.getElementById('api-' + ai);
+                if (secEl) setApi(ai, !secEl.classList.contains('collapsed'), true);
+                return;
+            }
+            if (act === 'toggle-try') {
+                var boxEl = el.closest('.try');
+                if (boxEl) {
+                    boxEl.classList.toggle('collapsed');
+                    if (!boxEl.classList.contains('collapsed')) updateTokenHint(Number(el.dataset.idx));
+                }
+                return;
+            }
+            if (act === 'toggle-tag') {
+                var tg = el.dataset.tag;
+                var gEl = findGroup(tg);
+                setGroup(tg, !(gEl && gEl.classList.contains('collapsed')), true);
+                return;
+            }
+            // 居中 / 全屏 布局切换
+            if (act === 'toggle-layout') {
+                var isFull = document.documentElement.classList.toggle('full');
+                try {
+                    localStorage.setItem('apidoc.layout', isFull ? 'full' : 'center');
+                } catch (err) {
+                }
+                syncLayoutBtn();
+                return;
+            }
+            if (act === 'expand-all' || act === 'collapse-all') {
+                var col = act === 'collapse-all';
+                Array.prototype.forEach.call(document.querySelectorAll('.group'), function (g) {
+                    setGroup(g.dataset.tag, col, true);
+                });
+                Object.keys(META).forEach(function (i) {
+                    setApi(Number(i), col, true);
+                });
+                Array.prototype.forEach.call(document.querySelectorAll('table.tbl'), function (tbl) {
+                    if (tbl.querySelector('tr.grp[data-gid]')) setFoldAll(tbl, col);
+                });
+                localStorage.setItem('apidoc.fold|' + SPEC_URL, col ? '0' : '1');
+                return;
+            }
+            // 参数表内：某个嵌套结构的展开/收起
+            if (act === 'toggle-grp') {
+                var tbl1 = el.closest('table');
+                el.classList.toggle('folded');
+                if (tbl1) {
+                    recalcFold(tbl1);
+                    syncFoldBtn(tbl1);
+                }
+                return;
+            }
+            // 参数表内：整表展开/收起
+            if (act === 'fold-table') {
+                var tbl2 = el.closest('table');
+                if (!tbl2) return;
+                // 按按钮文案执行：有折叠的 → 全部展开；否则全部收起
+                var anyFolded = Array.prototype.some.call(tbl2.querySelectorAll('tr.grp[data-gid]'), function (t) {
+                    return t.classList.contains('folded');
+                });
+                setFoldAll(tbl2, !anyFolded);
+                localStorage.setItem('apidoc.fold|' + SPEC_URL, anyFolded ? '1' : '0');
+                return;
+            }
+            // 描述列过长时的展开/收起
+            if (act === 'toggle-desc') {
+                var cell = el.closest('.dcell');
+                if (!cell) return;
+                var open = cell.classList.toggle('open');
+                var more = cell.querySelector('.dmore');
+                if (more) more.textContent = open ? '收起' : '展开';
+                return;
+            }
+            if (act === 'send') {
+                send(el);
+                return;
+            }
+            if (act === 'fill') {
+                var b = box(el.dataset.idx);
+                var meta = META[el.dataset.idx];
+                var op = LIST[el.dataset.idx].op;
+                var rb = op.requestBody ? deref(op.requestBody) : null;
+                var content = rb ? (rb.content || {}) : {};
+                var ct = Object.keys(content)[0];
+                var sch = ct ? deref(content[ct].schema || {}) : null;
+                var ta = b.querySelector('.f-body');
+                if (ta && sch) ta.value = JSON.stringify(sample(sch), null, 2);
+                b.querySelector('.f-url').value = meta.path;
+                return;
+            }
+            if (act === 'copy') {
+                var pre = el.closest('.resp').querySelector('.resp-body');
+                var text = pre.textContent || '';
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text).then(function () {
+                        el.textContent = '已复制';
+                        setTimeout(function () {
+                            el.textContent = '复制';
+                        }, 1200);
+                    });
+                }
+                return;
+            }
+        });
+        // 「需 Token」勾选
+        document.addEventListener('change', function (e) {
+            var cb = e.target;
+            if (!cb || !cb.matches('input[data-act="auth"]')) return;
+            var i = Number(cb.dataset.idx);
+            var on = cb.checked;
+            localStorage.setItem('apidoc.auth|' + SPEC_URL + '|' + apiKeyOf(i), on ? '1' : '0');
+            syncAuthBadges(i, on);
+            updateTokenHint(i);
+        });
+
+        function updateTokenHint(idx) {
+            var bx = document.querySelector('.try[data-idx="' + idx + '"]');
+            if (!bx) return;
+            var w = bx.querySelector('[data-warn]');
+            if (!w) return;
+            w.style.display = (needToken(idx) && !document.getElementById('token').value.trim()) ? 'block' : 'none';
+        }
+
+        // Base / Token 持久化（Base 按文档分开存，切文档互不覆盖）
+        document.getElementById('base').addEventListener('change', function () {
+            localStorage.setItem(baseKey(), this.value.trim());
+        });
+        document.getElementById('token').addEventListener('change', function () {
+            localStorage.setItem(LS_TOKEN, this.value.trim());
+        });
+        document.getElementById('token').addEventListener('input', function () {
+            Object.keys(META).forEach(function (i) {
+                updateTokenHint(Number(i));
+            });
+        });
+
+        /* ============ 文档切换 ============ */
+        function initDocSelect() {
+            var sel = document.getElementById('docSel');
+            DOCS.forEach(function (d) {
+                var o = document.createElement('option');
+                o.value = docUrl(d);
+                o.textContent = docName(d);
+                o.title = docUrl(d);
+                if (docUrl(d) === SPEC_URL) o.selected = true;
+                sel.appendChild(o);
+            });
+            if (!DOCS.some(function (d) {
+                return docUrl(d) === SPEC_URL;
+            })) {
+                var o2 = document.createElement('option');
+                o2.value = SPEC_URL;
+                o2.textContent = SPEC_URL;
+                o2.selected = true;
+                sel.appendChild(o2);
+            }
+            sel.addEventListener('change', function () {
+                location.href = location.pathname + '?spec=' + encodeURIComponent(this.value);
+            });
+        }
+
+        /* ============ 加载 ============ */
+        var qs = new URLSearchParams(location.search);
+        SPEC_URL = docUrl(qs.get('spec') || qs.get('search') || DOCS[0] || 'api.json');
+
+        function init() {
+            fetch(SPEC_URL, {headers: {Accept: 'application/json'}})
+            .then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function (json) {
+                SPEC = json;
+                initDocSelect();
+                build();
+            })
+            .catch(function (e) {
+                // SPEC = DEMO;
+                initDocSelect();
+                document.getElementById('doc').insertAdjacentHTML('afterbegin',
+                    '<div class="title">Failed to load API definition.</div><div class="bucket">Not Found  ' + esc(SPEC_URL) + '（' + esc(e.message) + '）。</div>');
+            });
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>
