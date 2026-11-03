@@ -21,17 +21,18 @@ class Generator extends HyperfGenerator
 {
     public function generate(): void
     {
+
         $paths = $this->config->get('swagger.scan.paths', null);
         if ($paths === null) {
             $paths = $this->config->get('annotations.scan.paths', []);
         }
 
         $userProcessors = $this->config->get('swagger.processors', []);
-        if (! is_array($userProcessors)) {
+        if (!is_array($userProcessors)) {
             throw new InvalidArgumentException('The processors of swagger must be array.');
         }
 
-        $servers = (array) $this->config->get('swagger.server', []);
+        $servers = (array)$this->config->get('swagger.server', []);
 
         $generator = new \OpenApi\Generator();
         $openapi = $generator->setAliases(\OpenApi\Generator::DEFAULT_ALIASES)
@@ -78,12 +79,29 @@ class Generator extends HyperfGenerator
         }
 
         $path = $this->config->get('swagger.json_dir', BASE_PATH . '/storage/swagger');
-
+        $apiFile = '';
+        $apiFileList = [];
         foreach ($result as $serverName => $json) {
-            if (! is_dir($path)) {
-                @mkdir($path, 0755, true);
+            if (!is_dir($path) && !mkdir($path, 0755, true) && !is_dir($path)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $path));
             }
+
+            if (empty($apiFile)){
+                $apiFile = $serverName;
+            }
+            $apiFileList[] = $serverName . '.json';
             file_put_contents(rtrim($path, '/') . '/' . $serverName . '.json', Json::encode($json));
         }
+
+        $htmlFile = $this->getHtmlTemplate();
+        $html = file_get_contents($htmlFile);
+        $html = str_replace(array('{{$apifile}}', ' {{$apiFileList}}'), array($apiFile, implode(',', $apiFileList)), $html);
+        file_put_contents(rtrim($path, '/') . '/index.html', $html);
+    }
+
+    public function getHtmlTemplate(): string
+    {
+        $htmlTemplate = $this->config->get('swagger.template', 'default');
+        return is_file($htmlTemplate) ? $htmlTemplate : __DIR__ . '/stubs/' . $htmlTemplate . '.stub';
     }
 }

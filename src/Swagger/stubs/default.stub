@@ -31,7 +31,7 @@
             context = decodeURIComponent(r[2]);
         reg = null;
         r = null;
-        return context == null || context == "" || context == "undefined" ? "/http.json" : context;
+        return context == null || context == "" || context == "undefined" ? "/{{$apifile}}.json" : context;
     }
 </script>
 </body>

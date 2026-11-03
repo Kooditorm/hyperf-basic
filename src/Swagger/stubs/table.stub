@@ -1042,7 +1042,7 @@
         'use strict';
         /* ============ 常量 ============ */
         // 同目录下的文档文件，按需增删，只写文件名即可
-        var DOCS = ['api.json', 'admin.json'];
+        var DOCS = {{$apiFileList}};
         var METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
         /* 文件名 -> 请求路径：统一补 / ，保证从当前页面所在的同目录下取到 */
@@ -1620,7 +1620,7 @@
 
         // 接口是否需要 Token：手动设置优先 > op.security > 全局 security > 按文档默认
         // 这里也是文件名，和 DOCS 保持一致
-        var DEFAULT_AUTH_DOCS = ['admin.json'];
+        var DEFAULT_AUTH_DOCS = ['{{$apiFile}}.json'];
 
         function defaultToken(idx) {
             var m = META[idx];
