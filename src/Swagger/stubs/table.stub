@@ -1042,7 +1042,7 @@
         'use strict';
         /* ============ 常量 ============ */
         // 同目录下的文档文件，按需增删，只写文件名即可
-        var DOCS = {{$apiFileList}};
+        var DOCS = [{{$apiFileList}}];
         var METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
         /* 文件名 -> 请求路径：统一补 / ，保证从当前页面所在的同目录下取到 */
