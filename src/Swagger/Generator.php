@@ -93,9 +93,11 @@ class Generator extends HyperfGenerator
             file_put_contents(rtrim($path, '/') . '/' . $serverName . '.json', Json::encode($json));
         }
 
+        $apiFileListJs = implode(',', array_map(static fn (string $file) => "'{$file}'", $apiFileList));
+
         $htmlFile = $this->getHtmlTemplate();
         $html = file_get_contents($htmlFile);
-        $html = str_replace(array('{{$apifile}}', ' {{$apiFileList}}'), array($apiFile, implode(',', $apiFileList)), $html);
+        $html = str_replace(['{{$apifile}}', '{{$apiFileList}}'], [$apiFile, $apiFileListJs], $html);
         file_put_contents(rtrim($path, '/') . '/index.html', $html);
     }
 
