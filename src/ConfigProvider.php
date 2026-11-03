@@ -31,7 +31,14 @@ class ConfigProvider
                     ]
                 ]
             ],
-            'publish' => []
+            'publish' => [
+                [
+                    'id' => 'config',
+                    'description' => 'The config of swagger.',
+                    'source' => __DIR__ . '/publish/swagger.php',
+                    'destination' => BASE_PATH . '/config/autoload/swagger.php'
+                ]
+            ]
         ];
     }
 }
