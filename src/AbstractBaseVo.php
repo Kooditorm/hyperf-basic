@@ -19,6 +19,7 @@ use JsonSerializable;
 use Kooditorm\Hyperf\Basic\Annotations\ViewObject;
 use Kooditorm\Hyperf\Basic\Traits\HasAttributes;
 use ReflectionClass;
+use ReflectionException;
 use ReflectionNamedType;
 use ReflectionProperty;
 use Traversable;
@@ -39,7 +40,11 @@ class AbstractBaseVo implements Arrayable, Jsonable, JsonSerializable, ArrayAcce
     /** 数组属性的元素类型为 VO 的字段：[字段名 => VO 类名] */
     protected array $voItemCasts = [];
 
-    public function __construct(protected mixed $data = [])
+    /**
+     * @param  mixed  $result
+     * @throws ReflectionException
+     */
+    public function __construct(protected mixed $result = [])
     {
         $this->initProperties();
         $this->initPropertyCasts();
@@ -50,11 +55,11 @@ class AbstractBaseVo implements Arrayable, Jsonable, JsonSerializable, ArrayAcce
      */
     protected function source(): array
     {
-        if (is_array($this->data)) {
-            return $this->data;
+        if (is_array($this->result)) {
+            return $this->result;
         }
-        if ($this->data instanceof Arrayable) {
-            return $this->data->toArray();
+        if ($this->result instanceof Arrayable) {
+            return $this->result->toArray();
         }
 
         return [];

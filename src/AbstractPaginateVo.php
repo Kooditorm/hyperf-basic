@@ -10,10 +10,10 @@ declare(strict_types=1);
  * @license  https://github.com/Kooditorm/hyperf-basic/blob/master/LICENSE
  */
 
-namespace Kooditorm\Hyperf\Basic\VO;
+namespace Kooditorm\Hyperf\Basic;
 
 use Hyperf\Swagger\Annotation as OA;
-use Kooditorm\Hyperf\Basic\AbstractBaseVo;
+use Kooditorm\Hyperf\Basic\Annotations\MapFrom;
 
 abstract class AbstractPaginateVo extends AbstractBaseVo
 {
@@ -21,6 +21,7 @@ abstract class AbstractPaginateVo extends AbstractBaseVo
     public int $total;
 
     #[OA\Property(description: '当前页', type: 'int')]
+    #[MapFrom('current_page')]
     public int $page;
 
     #[OA\Property(description: '每页条数', type: 'int')]
@@ -28,4 +29,6 @@ abstract class AbstractPaginateVo extends AbstractBaseVo
 
     #[OA\Property(description: '总页数', type: 'int')]
     public int $last_page;
+
+    public array $data;
 }

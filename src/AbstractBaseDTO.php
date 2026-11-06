@@ -12,17 +12,22 @@ declare(strict_types=1);
 
 namespace Kooditorm\Hyperf\Basic;
 
-use App\Common\Traits\HasAttributes;
 use ArrayAccess;
 use Hyperf\Contract\Arrayable;
 use Hyperf\Contract\Jsonable;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use JsonSerializable;
+use Kooditorm\Hyperf\Basic\Traits\HasAttributes;
+use ReflectionException;
 
 abstract class AbstractBaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 {
     use HasAttributes;
 
+    /**
+     * @param  RequestInterface  $request
+     * @throws ReflectionException
+     */
     public function __construct(protected RequestInterface $request)
     {
         $this->initProperties();
