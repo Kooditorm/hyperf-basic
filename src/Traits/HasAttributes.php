@@ -2,22 +2,14 @@
 
 declare(strict_types=1);
 
-/**
- * This file is part of Kooditorm/hyperf-basic.
- *
- * @link     https://github.com/Kooditorm/hyperf-basic
- * @contact  oswin.hu@gmail.com
- * @license  https://github.com/Kooditorm/hyperf-basict/blob/master/LICENSE
- */
-
 namespace Kooditorm\Hyperf\Basic\Traits;
 
 use Hyperf\Contract\Arrayable;
 use JsonException;
-use Kooditorm\Hyperf\Basic\Annotations\VoTransform;
+use Kooditorm\Hyperf\Basic\Annotations\MapFrom;
 use ReflectionClass;
+use ReflectionException;
 use ReflectionProperty;
-use function Hyperf\Collection\collect;
 
 /**
  * DTO / VO 的公共属性容器。
@@ -50,16 +42,19 @@ trait HasAttributes
     abstract protected function source(): array;
 
     /**
-     * 初始化字段白名单与默认值
+     * 初始化字段白名单、默认值与字段重命名映射
+     * @throws ReflectionException
      */
     protected function initProperties(): void
     {
+        $this->collectFieldMap();
+
         $properties = $this->getProperties();
         if (empty($properties)) {
             return;
         }
         foreach ($properties as $key => $defaultValue) {
-            if (!is_null($defaultValue)) {
+            if (! is_null($defaultValue)) {
                 $this->property[$key] = $defaultValue;
             }
             $this->accessFields[] = $key;
@@ -67,15 +62,13 @@ trait HasAttributes
     }
 
     /**
-     * 收集字段重命名映射：#[VoTransform('new Field')]
-     *
-     * @return void
+     * 收集字段重命名映射：#[MapFrom('current_page')]
      */
-    protected function collectFieldMaps(): void
+    protected function collectFieldMap(): void
     {
         $reflection = new ReflectionClass($this);
         foreach ($reflection->getProperties() as $property) {
-            foreach ($property->getAttributes(VoTransform::class) as $attribute) {
+            foreach ($property->getAttributes(MapFrom::class) as $attribute) {
                 $this->fieldMap[$attribute->newInstance()->from] = $property->getName();
             }
         }
@@ -91,6 +84,7 @@ trait HasAttributes
 
     /**
      * Dynamically retrieve attributes on the object.
+     * @throws ReflectionException
      */
     public function __get(string $key): mixed
     {
@@ -123,6 +117,7 @@ trait HasAttributes
 
     /**
      * Get the value for a given offset.
+     * @throws ReflectionException
      */
     public function offsetGet(mixed $offset): mixed
     {
@@ -155,6 +150,7 @@ trait HasAttributes
 
     /**
      * Get an attribute from the object.
+     * @throws ReflectionException
      */
     public function getAttribute(string $key): mixed
     {
@@ -173,6 +169,7 @@ trait HasAttributes
 
     /**
      * Get all attributes.
+     * @throws ReflectionException
      */
     public function getAttributes(): array
     {
@@ -182,6 +179,7 @@ trait HasAttributes
 
     /**
      * Get the instance as an array.
+     * @throws ReflectionException
      */
     public function toArray(): array
     {
@@ -210,6 +208,7 @@ trait HasAttributes
      * Get allowed fields with default values
      *
      * @return array
+     * @throws ReflectionException
      */
     protected function getProperties(): array
     {
@@ -247,14 +246,18 @@ trait HasAttributes
      * 载入属性，优先级：外部数据 < 类属性默认值 < 显式赋值
      *
      * @return void
+     * @throws ReflectionException
      */
     protected function loadAttrs(): void
     {
+        // DTO 由容器 get() 注入，实例会被复用；每次载入都必须从干净状态重建
+        $this->attributes = [];
+
         $source = $this->source();
 
         // 1) 同名字段直接落位
         foreach ($source as $key => $value) {
-            if (!isset($this->fieldMap[$key]) && in_array($key, $this->accessFields, true)) {
+            if (! isset($this->fieldMap[$key]) && in_array($key, $this->accessFields, true)) {
                 $this->attributes[$key] = $this->castValue($key, $value);
             }
         }
@@ -262,17 +265,17 @@ trait HasAttributes
         // 2) 重命名字段：同名字段已存在时不覆盖，别名只做兜底
         foreach ($source as $key => $value) {
             $field = $this->fieldMap[$key] ?? null;
-            if (!isset($this->attributes[$field]) && !is_null($field) && in_array($field, $this->accessFields, true)) {
+            if ($field !== null &&  ! isset($this->attributes[$field]) && in_array($field, $this->accessFields, true)) {
                 $this->attributes[$field] = $this->castValue($field, $value);
             }
         }
 
+        // 4) 运行中被修改过的属性值覆盖默认值
         foreach ($this->getProperties() as $key => $defaultValue) {
-            if (!empty($defaultValue) && (!isset($this->property[$key]) || $this->property[$key] !== $defaultValue)) {
+            if (! empty($defaultValue) && (! isset($this->property[$key]) || $this->property[$key] !== $defaultValue)) {
                 $this->attributes[$key] = $defaultValue;
             }
         }
-
         $this->attributes = array_merge($this->attributes, $this->attr);
     }
 

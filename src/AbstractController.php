@@ -7,7 +7,7 @@ declare(strict_types=1);
  *
  * @link     https://github.com/Kooditorm/hyperf-basic
  * @contact  oswin.hu@gmail.com
- * @license  https://github.com/Kooditorm/hyperf-basict/blob/master/LICENSE
+ * @license  https://github.com/Kooditorm/hyperf-basic/blob/master/LICENSE
  */
 
 namespace Kooditorm\Hyperf\Basic;

@@ -6,18 +6,18 @@ declare(strict_types=1);
  *
  * @link     https://github.com/Kooditorm/hyperf-basic
  * @contact  oswin.hu@gmail.com
- * @license  https://github.com/Kooditorm/hyperf-basict/blob/master/LICENSE
+ * @license  https://github.com/Kooditorm/hyperf-basic/blob/master/LICENSE
  */
 
 
 namespace Kooditorm\Hyperf\Basic;
 
+use App\Common\Traits\HasAttributes;
 use ArrayAccess;
 use Hyperf\Contract\Arrayable;
 use Hyperf\Contract\Jsonable;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use JsonSerializable;
-use Kooditorm\Hyperf\Basic\Traits\HasAttributes;
 
 abstract class AbstractBaseDTO implements Jsonable, Arrayable, ArrayAccess, JsonSerializable
 {
