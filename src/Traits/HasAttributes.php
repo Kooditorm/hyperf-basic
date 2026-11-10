@@ -251,8 +251,6 @@ trait HasAttributes
      */
     protected function loadAttrs(): void
     {
-        // DTO 由容器 get() 注入，实例会被复用；每次载入都必须从干净状态重建
-        $this->attributes = [];
 
         $source = $this->source();
 
