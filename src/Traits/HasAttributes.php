@@ -6,6 +6,7 @@ namespace Kooditorm\Hyperf\Basic\Traits;
 
 use Hyperf\Contract\Arrayable;
 use JsonException;
+use Kooditorm\Hyperf\Basic\AbstractBaseDTO;
 use Kooditorm\Hyperf\Basic\Annotations\MapFrom;
 use ReflectionClass;
 use ReflectionException;
@@ -54,7 +55,7 @@ trait HasAttributes
             return;
         }
         foreach ($properties as $key => $defaultValue) {
-            if (! is_null($defaultValue)) {
+            if (! is_null($defaultValue) && $this instanceof AbstractBaseDTO) {
                 $this->property[$key] = $defaultValue;
             }
             $this->accessFields[] = $key;
