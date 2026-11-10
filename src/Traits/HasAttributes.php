@@ -180,11 +180,15 @@ trait HasAttributes
 
     /**
      * Get the instance as an array.
-     * @throws ReflectionException
      */
     public function toArray(): array
     {
-        return $this->normalizeArray($this->getAttributes());
+        try{
+            return $this->normalizeArray($this->getAttributes());
+        }catch (ReflectionException $e) {
+            return [];
+        }
+
     }
 
     /**
