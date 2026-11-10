@@ -255,8 +255,6 @@ trait HasAttributes
 
         $source = $this->source();
 
-
-
         // 1) 同名字段直接落位
         foreach ($source as $key => $value) {
             if (! isset($this->fieldMap[$key]) && in_array($key, $this->accessFields, true)) {
