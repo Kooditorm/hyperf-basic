@@ -199,6 +199,7 @@ trait HasAttributes
 
     /**
      * @return array
+     * @throws ReflectionException
      */
     public function jsonSerialize(): array
     {
@@ -254,6 +255,8 @@ trait HasAttributes
 
         $source = $this->source();
 
+
+
         // 1) 同名字段直接落位
         foreach ($source as $key => $value) {
             if (! isset($this->fieldMap[$key]) && in_array($key, $this->accessFields, true)) {
@@ -266,6 +269,13 @@ trait HasAttributes
             $field = $this->fieldMap[$key] ?? null;
             if ($field !== null &&  ! isset($this->attributes[$field]) && in_array($field, $this->accessFields, true)) {
                 $this->attributes[$field] = $this->castValue($field, $value);
+            }
+        }
+
+        // 3) 类属性默认值。
+        foreach ($this->property as $key => $value) {
+            if (!isset($source[$key])) {
+                $this->attributes[$key] = $value;
             }
         }
 
