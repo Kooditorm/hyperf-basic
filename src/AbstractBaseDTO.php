@@ -31,6 +31,7 @@ abstract class AbstractBaseDTO implements Jsonable, Arrayable, ArrayAccess, Json
     public function __construct(protected RequestInterface $request)
     {
         $this->initProperties();
+        $this->loadAttrs();
     }
 
     /**
