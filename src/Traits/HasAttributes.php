@@ -288,31 +288,8 @@ trait HasAttributes
             }
         }
         $this->attributes = array_merge($this->attributes, $this->attr);
-
-        // 5) 同步回类声明的 public 属性，保证直接属性访问（如 $dto->mobile）可用
-        $this->syncProperties();
     }
 
-
-    /**
-     * 将 attributes 写回类声明的 public 属性，
-     * 避免无默认值的类型化属性因未初始化而无法直接访问。
-     */
-    protected function syncProperties(): void
-    {
-        $reflection = new ReflectionClass($this);
-        foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $prop) {
-            if ($prop->isStatic() || !array_key_exists($prop->getName(), $this->attributes)) {
-                continue;
-            }
-
-            try {
-                $prop->setValue($this, $this->attributes[$prop->getName()]);
-            } catch (Throwable) {
-                // 类型不兼容时跳过，仍以 attributes 为准
-            }
-        }
-    }
 
     /**
      * 外部数据进入时的类型转换钩子，默认原样返回。
