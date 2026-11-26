@@ -56,7 +56,7 @@ trait HasAttributes
             return;
         }
         foreach ($properties as $key => $defaultValue) {
-            if (! is_null($defaultValue) && $this instanceof AbstractBaseDTO) {
+            if (!is_null($defaultValue) && $this instanceof AbstractBaseDTO) {
                 $this->property[$key] = $defaultValue;
             }
             $this->accessFields[] = $key;
@@ -184,9 +184,9 @@ trait HasAttributes
      */
     public function toArray(): array
     {
-        try{
+        try {
             return $this->normalizeArray($this->getAttributes());
-        }catch (ReflectionException $e) {
+        } catch (ReflectionException $e) {
             return [];
         }
 
@@ -257,11 +257,13 @@ trait HasAttributes
     protected function loadAttrs(): void
     {
 
+        $this->attributes = [];
+
         $source = $this->source();
 
         // 1) 同名字段直接落位
         foreach ($source as $key => $value) {
-            if (! isset($this->fieldMap[$key]) && in_array($key, $this->accessFields, true)) {
+            if (!isset($this->fieldMap[$key]) && in_array($key, $this->accessFields, true)) {
                 $this->attributes[$key] = $this->castValue($key, $value);
             }
         }
@@ -269,7 +271,7 @@ trait HasAttributes
         // 2) 重命名字段：同名字段已存在时不覆盖，别名只做兜底
         foreach ($source as $key => $value) {
             $field = $this->fieldMap[$key] ?? null;
-            if ($field !== null &&  ! isset($this->attributes[$field]) && in_array($field, $this->accessFields, true)) {
+            if ($field !== null && !isset($this->attributes[$field]) && in_array($field, $this->accessFields, true)) {
                 $this->attributes[$field] = $this->castValue($field, $value);
             }
         }
@@ -283,7 +285,7 @@ trait HasAttributes
 
         // 4) 运行中被修改过的属性值覆盖默认值
         foreach ($this->getProperties() as $key => $defaultValue) {
-            if (! empty($defaultValue) && (! isset($this->property[$key]) || $this->property[$key] !== $defaultValue)) {
+            if (!empty($defaultValue) && (!isset($this->property[$key]) || $this->property[$key] !== $defaultValue)) {
                 $this->attributes[$key] = $defaultValue;
             }
         }
