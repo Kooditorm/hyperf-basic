@@ -19,7 +19,12 @@
         "hyperf/constants": "~3.1.0",
         "hyperf/http-server": "~3.1.0",
         "hyperf/db-connection": "~v3.1.0",
-        "hyperf/swagger": "~3.1.0"
+        "hyperf/swagger": "~3.1.0",
+        "hyperf/validation": "~3.1.0",
+        "hyperf/paginator": "~3.1.0",
+        "kooditorm/hyperf-validation": "^1.0.0",
+        "kooditorm/hyperf-jwt": "dev-master",
+        "kooditorm/hyperf-repository": "dev-master"
     },
     "autoload": {
         "psr-4": {

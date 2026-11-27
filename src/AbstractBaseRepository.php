@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 /**
@@ -12,11 +11,10 @@ declare(strict_types=1);
 
 namespace Kooditorm\Hyperf\Basic;
 
-class BaseService
+use Kooditorm\Repository\BaseRepository;
+use Kooditorm\Repository\Traits\CacheableRepository;
+
+abstract class AbstractBaseRepository extends BaseRepository
 {
-
-    public function __construct()
-    {
-
-    }
+    use CacheableRepository;
 }
